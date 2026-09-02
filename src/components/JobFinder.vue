@@ -217,8 +217,8 @@
           :class="{ active: highMatchOnly }"
           @click="highMatchOnly = !highMatchOnly"
         >
-          <span v-if="highMatchOnly">✓ Showing 60%+ High Match</span>
-          <span v-else>⭐ Show 60%+ Match Only</span>
+          <span v-if="highMatchOnly">✓ Showing {{ COMPATIBILITY_THRESHOLD }}%+ High Match</span>
+          <span v-else>⭐ Show {{ COMPATIBILITY_THRESHOLD }}%+ Match Only</span>
         </button>
         <button 
           class="btn-banner-filter"
@@ -313,7 +313,7 @@ import { ref, computed } from 'vue';
 import JobCard from './JobCard.vue';
 import AiMatchSpotlight from './AiMatchSpotlight.vue';
 import ResumeUploadModal from './ResumeUploadModal.vue';
-import { resumeService } from '../services/resumeService.js';
+import { resumeService, COMPATIBILITY_THRESHOLD } from '../services/resumeService.js';
 
 const props = defineProps({
   jobs: { type: Array, default: () => [] }
@@ -443,11 +443,11 @@ const filteredJobs = computed(() => {
     list = resumeService.getJobsBySuggestion(list, activeResume.value, suggestionPrompt.value.trim());
   }
 
-  // 7b. High Match (60%+ Only) Filter
+  // 7b. High Match Filter
   if (highMatchOnly.value && hasResume.value) {
     list = list.filter(j => {
       const comp = resumeService.computeCompatibility(j, activeResume.value);
-      return (comp.overallScore || 0) >= 60;
+      return (comp.overallScore || 0) >= COMPATIBILITY_THRESHOLD;
     });
   }
 

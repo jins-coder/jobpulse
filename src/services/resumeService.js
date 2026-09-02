@@ -21,6 +21,9 @@ export const EMPTY_RESUME = {
 // Backwards-compatible export for clean default schema
 export const DEFAULT_RESUME = EMPTY_RESUME;
 
+// Dynamic ATS Compatibility Threshold configured via .env (defaults to 60%)
+export const COMPATIBILITY_THRESHOLD = Number(import.meta.env?.VITE_COMPATIBILITY_THRESHOLD) || 60;
+
 export const resumeService = {
   // 1. Check if user has uploaded a valid resume
   hasUploadedResume(resume) {
@@ -349,7 +352,7 @@ export const resumeService = {
     const experienceScore = candidateYears >= requiredYears ? 15 : Math.round((candidateYears / requiredYears) * 15);
 
     const overallScore = Math.min(99, Math.max(15, skillScore + titleScore + experienceScore));
-    const isCompatible = overallScore >= 60;
+    const isCompatible = overallScore >= COMPATIBILITY_THRESHOLD;
 
     return {
       overallScore,
@@ -368,7 +371,7 @@ export const resumeService = {
     };
   },
 
-  // 4. Auto-Tailoring & Gap-Filling Engine (For jobs >= 60%)
+  // 4. Auto-Tailoring & Gap-Filling Engine (For jobs >= COMPATIBILITY_THRESHOLD)
   tailorResumeForJob(job, baseResume = null) {
     const resume = JSON.parse(JSON.stringify(baseResume || this.getMasterResume() || EMPTY_RESUME));
     const compatibility = this.computeCompatibility(job, resume);

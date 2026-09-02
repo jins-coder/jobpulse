@@ -52,7 +52,7 @@
           </div>
           <div class="gauge-label-group">
             <span class="gauge-status">
-              {{ isPassingScore ? '60%+ MATCH' : 'BELOW 60%' }}
+              {{ isPassingScore ? `${threshold}%+ MATCH` : `BELOW ${threshold}%` }}
             </span>
             <span class="gauge-sub">
               {{ isPassingScore ? 'Eligible for Auto-Tailor' : 'Skill Gaps Detected' }}
@@ -78,14 +78,14 @@
           class="tab-btn" 
           :class="{ active: activeTab === 'tailor', disabled: !isPassingScore }"
           @click="isPassingScore && (activeTab = 'tailor')"
-          :title="isPassingScore ? 'Preview tailored resume' : 'Score must be 60%+ to unlock auto-tailoring'"
+          :title="isPassingScore ? 'Preview tailored resume' : `Score must be ${threshold}%+ to unlock auto-tailoring`"
         >
           <span>2. Tailored Resume & Gap-Filling</span>
           <span v-if="isPassingScore" class="tab-indicator-badge badge-ai">
             ⚡ AI Tailored
           </span>
           <span v-else class="tab-indicator-badge badge-locked">
-            🔒 Needs 60%
+            🔒 Needs {{ threshold }}%
           </span>
         </button>
 
@@ -129,7 +129,7 @@
           <div v-else class="alert-box alert-warning">
             <div class="alert-icon">⚠️</div>
             <div class="alert-body">
-              <strong>Compatibility Score is {{ compatibility.overallScore }}% (Below 60% Requirement)</strong>
+              <strong>Compatibility Score is {{ compatibility.overallScore }}% (Below {{ threshold }}% Requirement)</strong>
               <p>
                 This role requires specific skills not detected in your master resume. Review the missing skill tags below or edit your master profile to bridge the gap.
               </p>
@@ -608,7 +608,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { resumeService, EMPTY_RESUME, DEFAULT_RESUME } from '../services/resumeService.js';
+import { resumeService, EMPTY_RESUME, DEFAULT_RESUME, COMPATIBILITY_THRESHOLD } from '../services/resumeService.js';
 import { storageService } from '../services/storageService.js';
 import { dbService } from '../services/dbService.js';
 
@@ -626,6 +626,9 @@ const activeTab = ref('match'); // 'match' | 'tailor' | 'resume'
 const resumeViewMode = ref('tailored'); // 'tailored' | 'cover' | 'original'
 const isSubmitting = ref(false);
 
+// Configurable threshold from .env (defaults to 60)
+const threshold = computed(() => COMPATIBILITY_THRESHOLD);
+
 // Candidate Profile State
 const masterResume = ref(resumeService.getMasterResume() || JSON.parse(JSON.stringify(EMPTY_RESUME)));
 
@@ -635,10 +638,10 @@ const compatibility = computed(() => {
 });
 
 const isPassingScore = computed(() => {
-  return (compatibility.value?.overallScore || 0) >= 60;
+  return (compatibility.value?.overallScore || 0) >= threshold.value;
 });
 
-// Tailored Package (Generated when score >= 60%)
+// Tailored Package (Generated when score >= threshold)
 const tailoredPackage = computed(() => {
   return resumeService.tailorResumeForJob(props.job, masterResume.value);
 });

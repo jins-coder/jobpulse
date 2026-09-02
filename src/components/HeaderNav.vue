@@ -71,6 +71,20 @@
 
       <button 
         class="nav-tab" 
+        :class="{ active: currentView === 'ats' }"
+        @click="$emit('change-view', 'ats')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <path d="m9 15 2 2 4-4"/>
+        </svg>
+        <span>ATS Optimizer</span>
+        <span class="tab-badge-emerald">88%</span>
+      </button>
+
+      <button 
+        class="nav-tab" 
         :class="{ active: currentView === 'insights' }"
         @click="$emit('change-view', 'insights')"
       >
@@ -333,6 +347,17 @@ onUnmounted(() => {
   font-weight: 700;
   padding: 0.1rem 0.45rem;
   border-radius: var(--radius-full);
+}
+
+.tab-badge-emerald {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .scraping-indicator {

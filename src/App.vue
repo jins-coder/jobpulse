@@ -54,7 +54,15 @@
         @easy-apply="openEasyApply"
       />
 
-      <!-- 4. Market Insights & Analytics -->
+      <!-- 4. ATS Resume Optimizer & Parser Hub -->
+      <AtsChecker 
+        v-else-if="currentView === 'ats'"
+        :jobs="jobs"
+        @resume-updated="handleResumeUpdated"
+        @show-toast="showToast"
+      />
+
+      <!-- 5. Market Insights & Analytics -->
       <MarketInsights 
         v-else-if="currentView === 'insights'"
         :jobs="jobs"
@@ -107,13 +115,14 @@ import JobTracker from './components/JobTracker.vue';
 import MarketInsights from './components/MarketInsights.vue';
 import EasyApplyModal from './components/EasyApplyModal.vue';
 import AuthModal from './components/AuthModal.vue';
+import AtsChecker from './components/AtsChecker.vue';
 import { WhatItBrokeErrorBoundary } from '@whatitbroke/vue';
 import { storageService } from './services/storageService.js';
 import { ScraperRunner } from './services/scraperService.js';
 import { authService } from './services/authService.js';
 
 // App State
-const currentView = ref('explorer'); // 'explorer' | 'scraper' | 'tracker' | 'insights'
+const currentView = ref('explorer'); // 'explorer' | 'scraper' | 'tracker' | 'ats' | 'insights'
 const jobs = ref([]);
 const selectedJob = ref(null);
 const easyApplyJob = ref(null);
@@ -158,6 +167,10 @@ const handleAuthSuccess = (user) => {
 
 const handleUserLogout = () => {
   showToast('You have been signed out.');
+};
+
+const handleResumeUpdated = (updatedResume) => {
+  showToast(`Resume profile updated for ${updatedResume.name}!`);
 };
 
 // Job Actions

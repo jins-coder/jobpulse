@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import jobsRoutes from './routes/jobs.js';
+import atsRoutes from './routes/ats.js';
 
 export const app = express();
 
@@ -11,6 +12,7 @@ app.use(express.json());
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRoutes);
+app.use('/api/ats', atsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

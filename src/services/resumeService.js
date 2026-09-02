@@ -349,7 +349,7 @@ export const resumeService = {
     const experienceScore = candidateYears >= requiredYears ? 15 : Math.round((candidateYears / requiredYears) * 15);
 
     const overallScore = Math.min(99, Math.max(15, skillScore + titleScore + experienceScore));
-    const isCompatible = overallScore >= 75;
+    const isCompatible = overallScore >= 60;
 
     return {
       overallScore,
@@ -368,7 +368,7 @@ export const resumeService = {
     };
   },
 
-  // 4. Auto-Tailoring & Gap-Filling Engine (For jobs >= 75%)
+  // 4. Auto-Tailoring & Gap-Filling Engine (For jobs >= 60%)
   tailorResumeForJob(job, baseResume = null) {
     const resume = JSON.parse(JSON.stringify(baseResume || this.getMasterResume() || EMPTY_RESUME));
     const compatibility = this.computeCompatibility(job, resume);

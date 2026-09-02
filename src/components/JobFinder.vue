@@ -217,8 +217,8 @@
           :class="{ active: highMatchOnly }"
           @click="highMatchOnly = !highMatchOnly"
         >
-          <span v-if="highMatchOnly">✓ Showing 75%+ High Match</span>
-          <span v-else>⭐ Show 75%+ Match Only</span>
+          <span v-if="highMatchOnly">✓ Showing 60%+ High Match</span>
+          <span v-else>⭐ Show 60%+ Match Only</span>
         </button>
         <button 
           class="btn-banner-filter"
@@ -443,11 +443,11 @@ const filteredJobs = computed(() => {
     list = resumeService.getJobsBySuggestion(list, activeResume.value, suggestionPrompt.value.trim());
   }
 
-  // 7b. High Match (75%+ Only) Filter
+  // 7b. High Match (60%+ Only) Filter
   if (highMatchOnly.value && hasResume.value) {
     list = list.filter(j => {
       const comp = resumeService.computeCompatibility(j, activeResume.value);
-      return (comp.overallScore || 0) >= 75;
+      return (comp.overallScore || 0) >= 60;
     });
   }
 

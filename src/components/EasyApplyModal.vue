@@ -52,7 +52,7 @@
           </div>
           <div class="gauge-label-group">
             <span class="gauge-status">
-              {{ isPassingScore ? '75%+ MATCH' : 'BELOW 75%' }}
+              {{ isPassingScore ? '60%+ MATCH' : 'BELOW 60%' }}
             </span>
             <span class="gauge-sub">
               {{ isPassingScore ? 'Eligible for Auto-Tailor' : 'Skill Gaps Detected' }}
@@ -78,14 +78,14 @@
           class="tab-btn" 
           :class="{ active: activeTab === 'tailor', disabled: !isPassingScore }"
           @click="isPassingScore && (activeTab = 'tailor')"
-          :title="isPassingScore ? 'Preview tailored resume' : 'Score must be 75%+ to unlock auto-tailoring'"
+          :title="isPassingScore ? 'Preview tailored resume' : 'Score must be 60%+ to unlock auto-tailoring'"
         >
           <span>2. Tailored Resume & Gap-Filling</span>
           <span v-if="isPassingScore" class="tab-indicator-badge badge-ai">
             ⚡ AI Tailored
           </span>
           <span v-else class="tab-indicator-badge badge-locked">
-            🔒 Needs 75%
+            🔒 Needs 60%
           </span>
         </button>
 
@@ -129,7 +129,7 @@
           <div v-else class="alert-box alert-warning">
             <div class="alert-icon">⚠️</div>
             <div class="alert-body">
-              <strong>Compatibility Score is {{ compatibility.overallScore }}% (Below 75% Requirement)</strong>
+              <strong>Compatibility Score is {{ compatibility.overallScore }}% (Below 60% Requirement)</strong>
               <p>
                 This role requires specific skills not detected in your master resume. Review the missing skill tags below or edit your master profile to bridge the gap.
               </p>
@@ -635,10 +635,10 @@ const compatibility = computed(() => {
 });
 
 const isPassingScore = computed(() => {
-  return (compatibility.value?.overallScore || 0) >= 75;
+  return (compatibility.value?.overallScore || 0) >= 60;
 });
 
-// Tailored Package (Generated when score >= 75%)
+// Tailored Package (Generated when score >= 60%)
 const tailoredPackage = computed(() => {
   return resumeService.tailorResumeForJob(props.job, masterResume.value);
 });

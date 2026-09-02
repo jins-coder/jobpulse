@@ -1,0 +1,690 @@
+<template>
+  <div class="job-finder-root">
+    <!-- Hero / Search Control Bar -->
+    <div class="search-hero glass-panel">
+      <div class="search-primary-row">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            class="search-main-input" 
+            placeholder="Search by role, company, or tech stack (e.g., Vue 3, Vite, Python, Senior)..."
+          />
+          <button v-if="searchQuery" class="clear-search-btn" @click="searchQuery = ''">✕</button>
+        </div>
+
+        <div class="location-input-wrapper">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <input 
+            type="text" 
+            v-model="locationQuery" 
+            class="search-location-input" 
+            placeholder="Location or 'Remote'..."
+          />
+        </div>
+
+        <button class="btn btn-primary search-action-btn" @click="$emit('request-scrape', { query: searchQuery, location: locationQuery })">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20"/>
+            <path d="m17 5-5-3-5 3"/>
+            <path d="m17 19-5 3-5-3"/>
+            <path d="M2 12h20"/>
+          </svg>
+          <span>Scrape Keywords</span>
+        </button>
+      </div>
+
+      <!-- Advanced Filters Bar -->
+      <div class="filters-bar">
+        <!-- Platform Filters -->
+        <div class="filter-group">
+          <span class="filter-label">Platform:</span>
+          <div class="pill-options">
+            <button 
+              class="filter-pill" 
+              :class="{ active: selectedPlatform === 'All' }"
+              @click="selectedPlatform = 'All'"
+            >
+              All
+            </button>
+            <button 
+              v-for="plat in platforms" 
+              :key="plat" 
+              class="filter-pill"
+              :class="{ active: selectedPlatform === plat }"
+              @click="selectedPlatform = plat"
+            >
+              {{ plat }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Experience Level -->
+        <div class="filter-group">
+          <span class="filter-label">Level:</span>
+          <div class="pill-options">
+            <button 
+              class="filter-pill" 
+              :class="{ active: selectedLevel === 'All' }"
+              @click="selectedLevel = 'All'"
+            >
+              All
+            </button>
+            <button 
+              v-for="lvl in levels" 
+              :key="lvl" 
+              class="filter-pill"
+              :class="{ active: selectedLevel === lvl }"
+              @click="selectedLevel = lvl"
+            >
+              {{ lvl }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Remote Toggle -->
+        <div class="toggle-group" @click="remoteOnly = !remoteOnly">
+          <div class="toggle-switch" :class="{ active: remoteOnly }">
+            <span class="toggle-thumb"></span>
+          </div>
+          <span class="toggle-label">Remote Only</span>
+        </div>
+      </div>
+
+      <!-- Secondary Controls: Min Salary & Sort -->
+      <div class="sub-controls-row">
+        <div class="salary-slider-group">
+          <span class="slider-label">Min Salary: <strong class="emerald-text">${{ minSalary / 1000 }}k/yr</strong></span>
+          <input 
+            type="range" 
+            min="0" 
+            max="200000" 
+            step="10000" 
+            v-model.number="minSalary" 
+            class="range-slider"
+          />
+        </div>
+
+        <div class="sort-and-view-group">
+          <div class="sort-dropdown">
+            <span class="sort-label">Sort:</span>
+            <select v-model="sortBy" class="select-field">
+              <option value="newest">Newest Scraped</option>
+              <option value="salary-desc">Highest Salary</option>
+              <option value="title-asc">Title (A - Z)</option>
+              <option value="company-asc">Company (A - Z)</option>
+            </select>
+          </div>
+
+          <div class="view-toggle-btns">
+            <button 
+              class="view-btn" 
+              :class="{ active: viewMode === 'grid' }"
+              @click="viewMode = 'grid'"
+              title="Grid Layout"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="7" height="7" x="3" y="3" rx="1"/>
+                <rect width="7" height="7" x="14" y="3" rx="1"/>
+                <rect width="7" height="7" x="14" y="14" rx="1"/>
+                <rect width="7" height="7" x="3" y="14" rx="1"/>
+              </svg>
+            </button>
+            <button 
+              class="view-btn" 
+              :class="{ active: viewMode === 'list' }"
+              @click="viewMode = 'list'"
+              title="List Layout"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"/>
+                <line x1="8" y1="12" x2="21" y2="12"/>
+                <line x1="8" y1="18" x2="21" y2="18"/>
+                <line x1="3" y1="6" x2="3.01" y2="6"/>
+                <line x1="3" y1="12" x2="3.01" y2="12"/>
+                <line x1="3" y1="18" x2="3.01" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Filter Summary & Result Count -->
+    <div class="results-header">
+      <div class="results-count-box">
+        Showing <strong class="text-white">{{ filteredJobs.length }}</strong> of {{ jobs.length }} scraped opportunities
+      </div>
+
+      <button 
+        v-if="hasActiveFilters" 
+        class="btn-reset-filters" 
+        @click="resetFilters"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+        Reset Filters
+      </button>
+    </div>
+
+    <!-- Job Cards Grid / List -->
+    <div 
+      v-if="filteredJobs.length > 0" 
+      class="jobs-container" 
+      :class="{ 'grid-mode': viewMode === 'grid', 'list-mode': viewMode === 'list' }"
+    >
+      <JobCard 
+        v-for="job in filteredJobs" 
+        :key="job.id" 
+        :job="job"
+        @select="$emit('select-job', job)"
+        @toggle-save="$emit('toggle-save', job)"
+        @easy-apply="$emit('easy-apply', job)"
+      />
+    </div>
+
+    <!-- Empty State -->
+    <div v-else class="empty-state glass-panel">
+      <div class="empty-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.3-4.3"/>
+          <path d="M8 11h6"/>
+        </svg>
+      </div>
+      <h3 class="empty-title">No matching jobs found</h3>
+      <p class="empty-desc">
+        Try modifying your search filters or trigger the scraper engine to extract new job postings directly from LinkedIn, Indeed, and RemoteOK.
+      </p>
+      <div class="empty-actions">
+        <button class="btn btn-secondary" @click="resetFilters">Clear Active Filters</button>
+        <button class="btn btn-primary" @click="$emit('request-scrape', { query: searchQuery || 'Vue developer' })">
+          <span>Scrape "{{ searchQuery || 'Vue developer' }}" Jobs</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import JobCard from './JobCard.vue';
+
+const props = defineProps({
+  jobs: { type: Array, default: () => [] }
+});
+
+const emit = defineEmits(['select-job', 'toggle-save', 'request-scrape', 'easy-apply']);
+
+const platforms = ['LinkedIn', 'Indeed', 'RemoteOK', 'WeWorkRemotely', 'Wellfound'];
+const levels = ['Entry', 'Mid', 'Senior', 'Lead'];
+
+// Filter states
+const searchQuery = ref('');
+const locationQuery = ref('');
+const selectedPlatform = ref('All');
+const selectedLevel = ref('All');
+const remoteOnly = ref(false);
+const minSalary = ref(0);
+const sortBy = ref('newest');
+const viewMode = ref('grid');
+
+const hasActiveFilters = computed(() => {
+  return searchQuery.value !== '' || 
+         locationQuery.value !== '' || 
+         selectedPlatform.value !== 'All' || 
+         selectedLevel.value !== 'All' || 
+         remoteOnly.value || 
+         minSalary.value > 0;
+});
+
+const resetFilters = () => {
+  searchQuery.value = '';
+  locationQuery.value = '';
+  selectedPlatform.value = 'All';
+  selectedLevel.value = 'All';
+  remoteOnly.value = false;
+  minSalary.value = 0;
+  sortBy.value = 'newest';
+};
+
+const filteredJobs = computed(() => {
+  let list = [...props.jobs];
+
+  // 1. Text Search (title, company, tags)
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase().trim();
+    list = list.filter(j => {
+      const matchTitle = j.title?.toLowerCase().includes(q);
+      const matchCompany = j.company?.toLowerCase().includes(q);
+      const matchTags = (j.tags || []).some(t => t.toLowerCase().includes(q));
+      const matchDesc = j.description?.toLowerCase().includes(q);
+      return matchTitle || matchCompany || matchTags || matchDesc;
+    });
+  }
+
+  // 2. Location query
+  if (locationQuery.value.trim()) {
+    const lq = locationQuery.value.toLowerCase().trim();
+    list = list.filter(j => j.location?.toLowerCase().includes(lq));
+  }
+
+  // 3. Platform
+  if (selectedPlatform.value !== 'All') {
+    list = list.filter(j => j.platform === selectedPlatform.value);
+  }
+
+  // 4. Experience Level
+  if (selectedLevel.value !== 'All') {
+    list = list.filter(j => j.experienceLevel === selectedLevel.value);
+  }
+
+  // 5. Remote Only
+  if (remoteOnly.value) {
+    list = list.filter(j => j.isRemote);
+  }
+
+  // 6. Min Salary
+  if (minSalary.value > 0) {
+    list = list.filter(j => (j.salary?.min || 0) >= minSalary.value);
+  }
+
+  // 7. Sort
+  list.sort((a, b) => {
+    if (sortBy.value === 'newest') {
+      return new Date(b.scrapedAt || 0) - new Date(a.scrapedAt || 0);
+    }
+    if (sortBy.value === 'salary-desc') {
+      return (b.salary?.max || 0) - (a.salary?.max || 0);
+    }
+    if (sortBy.value === 'title-asc') {
+      return (a.title || '').localeCompare(b.title || '');
+    }
+    if (sortBy.value === 'company-asc') {
+      return (a.company || '').localeCompare(b.company || '');
+    }
+    return 0;
+  });
+
+  return list;
+});
+</script>
+
+<style scoped>
+.job-finder-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Hero Search Panel */
+.search-hero {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.search-primary-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+  flex: 2;
+  min-width: 280px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-main-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 0.8rem 2.5rem 0.8rem 2.75rem;
+  color: #ffffff;
+  font-family: var(--font-main);
+  font-size: 0.95rem;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.search-main-input:focus {
+  border-color: var(--accent-emerald);
+  box-shadow: 0 0 0 3px var(--accent-emerald-glow);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.location-input-wrapper {
+  flex: 1;
+  min-width: 180px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.location-input-wrapper svg {
+  position: absolute;
+  left: 0.9rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-location-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 0.8rem 1rem 0.8rem 2.5rem;
+  color: #ffffff;
+  font-family: var(--font-main);
+  font-size: 0.92rem;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.search-location-input:focus {
+  border-color: var(--accent-emerald);
+}
+
+.search-action-btn {
+  padding: 0.8rem 1.4rem;
+  font-size: 0.92rem;
+}
+
+/* Filters Bar */
+.filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.filter-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pill-options {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.filter-pill {
+  font-family: var(--font-main);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.filter-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.filter-pill.active {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+/* Remote Toggle */
+.toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-switch {
+  width: 36px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-full);
+  position: relative;
+  transition: background var(--transition-fast);
+}
+
+.toggle-switch.active {
+  background: var(--accent-emerald);
+}
+
+.toggle-thumb {
+  width: 14px;
+  height: 14px;
+  background: #ffffff;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  transition: transform var(--transition-fast);
+}
+
+.toggle-switch.active .toggle-thumb {
+  transform: translateX(16px);
+}
+
+.toggle-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Sub-controls row */
+.sub-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+}
+
+.salary-slider-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.slider-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.emerald-text {
+  color: #34d399;
+}
+
+.range-slider {
+  accent-color: var(--accent-emerald);
+  cursor: pointer;
+  width: 130px;
+}
+
+.sort-and-view-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sort-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.select-field {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.7rem;
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  font-size: 0.82rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.view-toggle-btns {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.2rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.view-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.view-btn.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Results header */
+.results-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem;
+}
+
+.results-count-box {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.text-white {
+  color: #ffffff;
+}
+
+.btn-reset-filters {
+  background: transparent;
+  border: none;
+  color: var(--accent-emerald);
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.btn-reset-filters:hover {
+  opacity: 0.8;
+}
+
+/* Grid & List Layouts */
+.jobs-container.grid-mode {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.25rem;
+}
+
+.jobs-container.list-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* Empty State */
+.empty-state {
+  padding: 4rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.empty-icon {
+  color: var(--text-muted);
+}
+
+.empty-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.empty-desc {
+  max-width: 480px;
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.empty-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+</style>

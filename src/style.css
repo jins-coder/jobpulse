@@ -1,45 +1,48 @@
-/* JobPulse Design System & Core Styles */
+@import "tailwindcss";
+
+/* JobPulse Design System & Cute Grey Core Styles */
 
 :root {
-  /* Color Tokens */
-  --bg-primary: #07090e;
-  --bg-secondary: #0d121d;
-  --bg-card: rgba(16, 23, 38, 0.7);
-  --bg-card-hover: rgba(23, 33, 54, 0.85);
-  --bg-card-active: rgba(30, 44, 72, 0.9);
-  --bg-glass: rgba(13, 18, 29, 0.65);
-  --bg-terminal: #070a11;
-  --bg-input: rgba(11, 17, 28, 0.8);
+  /* Cute Warm Slate & Cloud Grey Palette */
+  --bg-primary: #0b0f19;
+  --bg-secondary: #111827;
+  --bg-card: rgba(30, 41, 59, 0.65);
+  --bg-card-hover: rgba(51, 65, 85, 0.75);
+  --bg-card-active: rgba(71, 85, 105, 0.85);
+  --bg-glass: rgba(15, 23, 42, 0.75);
+  --bg-terminal: #090d16;
+  --bg-input: rgba(15, 23, 42, 0.85);
 
-  /* Brand Accents */
-  --accent-emerald: #10b981;
-  --accent-emerald-glow: rgba(16, 185, 129, 0.25);
-  --accent-cyan: #06b6d4;
-  --accent-indigo: #6366f1;
-  --accent-violet: #8b5cf6;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  /* Cute Pastel Accents */
+  --accent-emerald: #34d399;
+  --accent-emerald-glow: rgba(52, 211, 153, 0.25);
+  --accent-cyan: #38bdf8;
+  --accent-indigo: #818cf8;
+  --accent-violet: #a78bfa;
+  --accent-lavender: #c084fc;
+  --accent-amber: #fbbf24;
+  --accent-rose: #fb7185;
 
-  /* Typography Colors */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --text-inverse: #030712;
+  /* Typography */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-inverse: #020617;
 
   /* Borders & Dividers */
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-card: rgba(255, 255, 255, 0.1);
-  --border-accent: rgba(16, 185, 129, 0.4);
-  --border-glow: rgba(99, 102, 241, 0.35);
+  --border-subtle: rgba(148, 163, 184, 0.12);
+  --border-card: rgba(148, 163, 184, 0.18);
+  --border-accent: rgba(52, 211, 153, 0.4);
+  --border-glow: rgba(129, 140, 248, 0.35);
 
   /* Fonts */
   --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
-  --shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.7);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 24px var(--accent-emerald-glow);
 
   /* Transitions */
@@ -47,10 +50,11 @@
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
-  /* Border Radii */
-  --radius-sm: 6px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
+  /* Cute Rounded Corners */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
   --radius-full: 9999px;
 }
 

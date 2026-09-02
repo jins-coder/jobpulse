@@ -1,4 +1,5 @@
 import vue from '@vitejs/plugin-vue'
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig, loadEnv } from 'vite'
 import { app as expressApp } from './server/index.js'
 
@@ -22,7 +23,11 @@ export default defineConfig(({ mode }) => {
   const auth = Buffer.from(`${user}:${pass}`).toString('base64')
 
   return {
-    plugins: [vue(), expressBackendPlugin()],
+    plugins: [
+      tailwindcss(),
+      vue(),
+      expressBackendPlugin()
+    ],
     server: {
       proxy: {
         '/api/opensearch': {

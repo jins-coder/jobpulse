@@ -444,6 +444,37 @@ onUnmounted(() => {
   }
   .header-nav {
     overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .header-nav::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .header-root {
+    padding: 0.85rem;
+    border-radius: var(--radius-lg);
+  }
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: stretch;
+    gap: 0.4rem;
+  }
+  .header-actions > * {
+    flex: 1 1 auto;
+  }
+  .nav-tab {
+    padding: 0.45rem 0.65rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  .brand-title {
+    font-size: 1.1rem;
+  }
+  .brand-subtitle {
+    display: none;
   }
 }
 

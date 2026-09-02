@@ -755,7 +755,7 @@ const filteredJobs = computed(() => {
 /* Grid & List Layouts */
 .jobs-container.grid-mode {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
   gap: 1.25rem;
 }
 
@@ -797,5 +797,45 @@ const filteredJobs = computed(() => {
   align-items: center;
   gap: 0.75rem;
   margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .search-hero {
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+  }
+  .search-primary-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+  }
+  .search-input-wrapper,
+  .location-input-wrapper {
+    width: 100%;
+    min-width: 100%;
+  }
+  .btn-upload-radar,
+  .search-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .filters-bar {
+    gap: 0.75rem;
+  }
+  .sub-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .salary-slider-group {
+    width: 100%;
+  }
+  .sort-select-wrapper {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .sort-select {
+    flex: 1;
+  }
 }
 </style>

@@ -123,7 +123,7 @@ import { ScraperRunner } from './services/scraperService.js';
 import { authService } from './services/authService.js';
 
 // App State
-const currentView = ref('explorer'); // 'explorer' | 'scraper' | 'tracker' | 'ats' | 'insights'
+const currentView = ref('insights'); // 'explorer' | 'scraper' | 'tracker' | 'ats' | 'insights'
 const jobs = ref([]);
 const selectedJob = ref(null);
 const easyApplyJob = ref(null);

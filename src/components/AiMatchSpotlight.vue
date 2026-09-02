@@ -608,8 +608,16 @@ const clearSuggestion = () => {
   gap: 1.25rem;
 }
 
-@media (max-width: 1050px) {
+@media (max-width: 1100px) and (min-width: 640px) {
+  .confident-cards-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
   .confident-cards-grid { grid-template-columns: 1fr; }
+  .prompt-input-wrap { flex-direction: column; align-items: stretch; }
+  .radar-footer { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  .radar-action-btns { width: 100%; justify-content: stretch; }
+  .radar-action-btns > * { flex: 1; }
 }
 
 .confident-card {

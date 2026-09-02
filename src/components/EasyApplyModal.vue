@@ -541,8 +541,11 @@
               >
                 <span>🚀 Complete Submission on {{ job.company }} ({{ job.platform }}) ↗</span>
               </a>
+              <button class="btn btn-primary" @click="downloadTailoredPdf" title="Download pixel-perfect ATS vector PDF resume">
+                📄 Download Tailored PDF
+              </button>
               <button class="btn btn-secondary" @click="downloadTailoredResume" title="Download clean ATS-formatted resume with bridged skills">
-                📥 ATS Resume (.txt)
+                📥 ATS (.txt)
               </button>
               <button class="btn btn-secondary" @click="downloadBridgedOriginalResume" title="Download your original resume updated with bridged skills">
                 📄 Original + Bridged (.txt)
@@ -577,13 +580,22 @@
             Close
           </button>
 
+          <!-- Download Tailored PDF -->
+          <button 
+            class="btn btn-secondary btn-pdf"
+            @click="downloadTailoredPdf"
+            title="Download pixel-perfect ATS vector PDF resume"
+          >
+            📄 Tailored PDF
+          </button>
+
           <!-- Copy Cover Pitch -->
           <button 
             class="btn btn-secondary"
             @click="copyFullPackage"
             title="Copy customized cover pitch to clipboard"
           >
-            {{ copiedPackage ? '✓ Pitch Copied!' : '📋 Copy Cover Pitch' }}
+            {{ copiedPackage ? '✓ Pitch Copied!' : '📋 Copy Pitch' }}
           </button>
 
           <!-- Download Tailored Resume (ATS Clean Format) -->
@@ -592,7 +604,7 @@
             @click="downloadTailoredResume"
             title="Download ATS-formatted resume with bridged skills & experience"
           >
-            📥 ATS Resume (.txt)
+            📥 ATS (.txt)
           </button>
 
           <!-- Download Original Resume Updated with Bridged Skills -->
@@ -623,6 +635,7 @@ import { ref, computed, onMounted } from 'vue';
 import { resumeService, EMPTY_RESUME, DEFAULT_RESUME, COMPATIBILITY_THRESHOLD } from '../services/resumeService.js';
 import { storageService } from '../services/storageService.js';
 import { dbService } from '../services/dbService.js';
+import { pdfGeneratorService } from '../services/pdfGeneratorService.js';
 
 const props = defineProps({
   job: {
@@ -832,6 +845,11 @@ const downloadBridgedOriginalResume = () => {
   URL.revokeObjectURL(url);
 };
 
+const downloadTailoredPdf = () => {
+  const r = tailoredPackage.value?.tailoredResume || masterResume.value;
+  pdfGeneratorService.generateTailoredPdf(r, props.job);
+};
+
 const copyFullPackage = () => {
   const r = tailoredPackage.value.tailoredResume || masterResume.value;
   const text = `CANDIDATE: ${r.name}\nROLE: ${props.job.title} @ ${props.job.company}\n\nCOVER NOTE:\n${tailoredPackage.value.coverPitch}\n\nSKILLS:\n${(r.skills || []).join(', ')}`;
@@ -989,8 +1007,8 @@ const applyOnOfficialSite = () => {
   // 1. Copy tailored pitch to clipboard
   copyFullPackage();
 
-  // 2. Download the updated resume with bridged skills
-  downloadTailoredResume();
+  // 2. Download the tailored vector PDF with bridged skills
+  downloadTailoredPdf();
 
   // 3. Build application record with bridged details
   const resume = tailoredPackage.value?.tailoredResume || masterResume.value;
@@ -2201,5 +2219,18 @@ const applyOnOfficialSite = () => {
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   display: flex;
   justify-content: flex-end;
+}
+
+.btn-pdf {
+  background: rgba(14, 165, 233, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  font-weight: 600;
+}
+.btn-pdf:hover {
+  background: rgba(14, 165, 233, 0.28);
+  border-color: #38bdf8;
+  color: #ffffff;
+  transform: translateY(-1px);
 }
 </style>

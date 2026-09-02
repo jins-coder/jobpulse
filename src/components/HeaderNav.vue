@@ -30,7 +30,7 @@
           <circle cx="11" cy="11" r="8"/>
           <path d="m21 21-4.3-4.3"/>
         </svg>
-        <span>Job Explorer</span>
+        <span>Job Feed</span>
         <span class="tab-badge">{{ totalJobs }}</span>
       </button>
 
@@ -44,35 +44,8 @@
           <polyline points="14 2 14 8 20 8"/>
           <path d="m9 15 2 2 4-4"/>
         </svg>
-        <span>ATS Optimizer</span>
-        <span class="tab-badge-emerald">FREE</span>
-      </button>
-
-      <button 
-        class="nav-tab" 
-        :class="{ active: currentView === 'insights' }"
-        @click="$emit('change-view', 'insights')"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="20" x2="18" y2="10"/>
-          <line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6" y1="20" x2="6" y2="14"/>
-        </svg>
-        <span>Market Insights</span>
-      </button>
-
-      <button 
-        class="nav-tab" 
-        :class="{ active: currentView === 'market-gaps' }"
-        @click="$emit('change-view', 'market-gaps')"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"/>
-          <line x1="12" y1="8" x2="12" y2="12"/>
-          <line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span>Market Gaps</span>
-        <span class="tab-badge-rose">7 Solved</span>
+        <span>ATS Studio</span>
+        <span class="tab-badge-emerald">OPTIMIZER</span>
       </button>
 
       <button 
@@ -85,7 +58,7 @@
           <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/>
           <path d="m9 14 2 2 4-4"/>
         </svg>
-        <span>Tracker</span>
+        <span>Application Tracker</span>
         <span class="tab-badge" v-if="trackedCount > 0">{{ trackedCount }}</span>
       </button>
     </nav>

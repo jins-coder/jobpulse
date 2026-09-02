@@ -105,7 +105,7 @@
           :title="job.status === 'applied' ? 'View submitted tailored application' : 'Easy Apply with resume & auto gap-filling'"
         >
           <span v-if="job.status === 'applied'">✓ Applied</span>
-          <span v-else>⚡ Easy Apply</span>
+          <span v-else>⚡ Tailor & Apply</span>
         </button>
         <a 
           :href="job.platformUrl || '#'" 

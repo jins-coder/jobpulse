@@ -35,23 +35,7 @@
           @show-toast="showToast"
         />
 
-        <!-- 3. Market Insights & Analytics -->
-        <MarketInsights 
-          v-else-if="currentView === 'insights'"
-          :jobs="jobs"
-          @change-view="switchView"
-        />
-
-        <!-- 4. What Current Job Market Lacks & Solutions -->
-        <MarketGaps 
-          v-else-if="currentView === 'market-gaps'"
-          :jobs="jobs"
-          @change-view="switchView"
-          @open-easy-apply="openEasyApply"
-          @upload-resume="openResumeEditor"
-        />
-
-        <!-- 5. Job Tracker Pipeline -->
+        <!-- 3. Application Tracker Pipeline (Kanban) -->
         <JobTracker 
           v-else-if="currentView === 'tracker'"
           :jobs="jobs"
@@ -104,8 +88,6 @@ import JobFinder from './components/JobFinder.vue';
 import JobCard from './components/JobCard.vue';
 import JobDetailModal from './components/JobDetailModal.vue';
 import JobTracker from './components/JobTracker.vue';
-import MarketInsights from './components/MarketInsights.vue';
-import MarketGaps from './components/MarketGaps.vue';
 import EasyApplyModal from './components/EasyApplyModal.vue';
 import AuthModal from './components/AuthModal.vue';
 import AtsChecker from './components/AtsChecker.vue';
@@ -114,8 +96,8 @@ import { storageService } from './services/storageService.js';
 import { authService } from './services/authService.js';
 import { dbService } from './services/dbService.js';
 
-// App State
-const currentView = ref('explorer'); // 'explorer' | 'ats' | 'insights' | 'market-gaps' | 'tracker'
+// App State (Streamlined to 3 Core Pillars: Job Feed, ATS Studio, Tracker)
+const currentView = ref('explorer'); // 'explorer' | 'ats' | 'tracker'
 const jobs = ref([]);
 const selectedJob = ref(null);
 const easyApplyJob = ref(null);

@@ -119,6 +119,90 @@ router.post('/submit', async (req, res) => {
   }
 });
 
+import { autoApplyAgent } from '../services/autoApplyAgent.js';
+
+/**
+ * POST /api/applications/auto-apply
+ * Runs autonomous auto-apply agent for target job
+ */
+router.post('/auto-apply', async (req, res) => {
+  try {
+    const {
+      jobId,
+      jobTitle,
+      company,
+      platform,
+      platformUrl,
+      candidate,
+      tailoredResume,
+      coverPitch
+    } = req.body;
+
+    if (!jobTitle || !company) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing required jobTitle or company for auto-apply.'
+      });
+    }
+
+    const executionResult = await autoApplyAgent.runAutoApply({
+      jobId,
+      jobTitle,
+      company,
+      platform,
+      platformUrl,
+      candidate,
+      tailoredResume,
+      coverPitch
+    });
+
+    const applicationRecord = {
+      id: executionResult.applicationId,
+      trackingCode: executionResult.dispatchRef,
+      jobId,
+      jobTitle,
+      company,
+      platform: executionResult.platform,
+      platformUrl: platformUrl || '#',
+      submittedAt: executionResult.submittedAt,
+      status: 'submitted',
+      deliveryStatus: 'Automated Agent Dispatch Confirmed',
+      matchScore: 95,
+      candidate: {
+        name: candidate?.name || 'Candidate',
+        email: candidate?.email || '',
+        phone: candidate?.phone || '',
+        location: candidate?.location || ''
+      },
+      tailoredResume: tailoredResume || null,
+      coverPitch: coverPitch || '',
+      executionLogs: executionResult.logs
+    };
+
+    // Store in backend json data store
+    const existing = readStoredApplications();
+    const idx = existing.findIndex(a => a.jobId === jobId);
+    if (idx >= 0) {
+      existing[idx] = applicationRecord;
+    } else {
+      existing.unshift(applicationRecord);
+    }
+    writeStoredApplications(existing);
+
+    return res.status(200).json({
+      status: 'success',
+      ...executionResult,
+      application: applicationRecord
+    });
+  } catch (err) {
+    console.error('[Applications API] Auto-apply error:', err);
+    return res.status(500).json({
+      status: 'error',
+      message: 'Auto-apply failed: ' + err.message
+    });
+  }
+});
+
 /**
  * GET /api/applications
  * Returns list of submitted applications

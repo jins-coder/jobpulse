@@ -13,7 +13,7 @@
           </div>
           <div>
             <h3 class="modal-title">Upload & Parse Resume</h3>
-            <p class="modal-subtitle">Re-ranks all jobs and updates your AI match radar in real-time</p>
+            <p class="modal-subtitle">Extracts candidate details and dynamically re-ranks all 21 jobs in real-time</p>
           </div>
         </div>
         <button class="close-btn" @click="$emit('close')">✕</button>
@@ -21,7 +21,7 @@
 
       <!-- Quick Test Presets -->
       <div class="presets-section">
-        <span class="presets-label">⚡ TEST DRIVE PRESET RESUMES:</span>
+        <span class="presets-label">⚡ 1-CLICK TEST DRIVE PRESETS:</span>
         <div class="presets-grid">
           <button 
             v-for="(p, key) in presets" 
@@ -45,7 +45,7 @@
           📁 Upload File (.pdf, .txt, .md, .json)
         </button>
         <button class="tab-btn" :class="{ active: inputTab === 'paste' }" @click="inputTab = 'paste'">
-          📝 Paste Raw Text
+          📝 Paste Raw Text / Markdown
         </button>
       </div>
 
@@ -67,7 +67,7 @@
             </svg>
           </div>
           <h4 class="drop-title">Drop your resume file here, or <span class="text-accent">browse</span></h4>
-          <p class="drop-hint">Supports PDF, Markdown, Text, or JSON resume formats</p>
+          <p class="drop-hint">Supports PDF, Markdown, Text, or JSON resume files</p>
           <span v-if="uploadedFileName" class="uploaded-badge">
             ✓ Selected: {{ uploadedFileName }}
           </span>
@@ -79,39 +79,113 @@
         <textarea 
           v-model="rawResumeText" 
           class="raw-textarea mono"
-          placeholder="Paste your resume markdown, bullet points, skills, or LinkedIn text here..."
+          placeholder="Paste your resume markdown, bullet points, skills, or LinkedIn profile text here..."
           @input="parseCurrentText"
         ></textarea>
       </div>
 
-      <!-- Extracted Candidate Live Preview -->
+      <!-- Extracted Candidate Live Preview & Fine-Tune Editor -->
       <div class="extracted-preview-box">
         <div class="preview-header">
-          <span class="preview-badge">PARSED CANDIDATE PROFILE</span>
+          <div class="badge-title-group">
+            <span class="preview-badge">PARSED CANDIDATE PROFILE</span>
+            <span class="verify-note">(Click any field to edit or fine-tune)</span>
+          </div>
           <span class="skills-count mono">{{ parsedCandidate.skills?.length || 0 }} skills identified</span>
         </div>
 
-        <div class="preview-candidate-row">
-          <div class="preview-avatar">
-            {{ (parsedCandidate.name || 'CP').slice(0, 2).toUpperCase() }}
-          </div>
-          <div class="preview-meta">
-            <div class="preview-name-row">
-              <strong class="preview-name">{{ parsedCandidate.name }}</strong>
-              <span class="preview-exp-badge mono">{{ parsedCandidate.yearsOfExperience }}+ Yrs Exp</span>
+        <!-- Editable Candidate Meta Grid -->
+        <div class="edit-meta-grid">
+          <!-- Name & Experience -->
+          <div class="field-row">
+            <div class="field-group flex-2">
+              <label class="field-lbl">Candidate Name</label>
+              <input 
+                type="text" 
+                v-model="parsedCandidate.name" 
+                class="field-txt font-bold text-white" 
+                placeholder="Candidate Full Name" 
+              />
             </div>
-            <span class="preview-headline">{{ parsedCandidate.headline }}</span>
-            <span class="preview-loc">{{ parsedCandidate.location }}</span>
+            <div class="field-group flex-1">
+              <label class="field-lbl">Experience</label>
+              <div class="exp-input-wrap">
+                <input 
+                  type="number" 
+                  v-model.number="parsedCandidate.yearsOfExperience" 
+                  min="0" 
+                  max="40" 
+                  class="field-txt mono" 
+                />
+                <span class="exp-unit">Yrs</span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div class="preview-skills-row">
-          <span v-for="skill in parsedCandidate.skills" :key="skill" class="detected-skill-chip">
-            {{ skill }}
-          </span>
-          <span v-if="!parsedCandidate.skills || parsedCandidate.skills.length === 0" class="no-skills-hint">
-            No technical skills detected yet. Type or paste skills above.
-          </span>
+          <!-- Professional Headline -->
+          <div class="field-group">
+            <label class="field-lbl">Professional Headline / Target Role</label>
+            <input 
+              type="text" 
+              v-model="parsedCandidate.headline" 
+              class="field-txt text-emerald" 
+              placeholder="e.g. Senior PHP / Laravel Backend Engineer" 
+            />
+          </div>
+
+          <!-- Location & Email -->
+          <div class="field-row">
+            <div class="field-group flex-1">
+              <label class="field-lbl">Location / Preference</label>
+              <input 
+                type="text" 
+                v-model="parsedCandidate.location" 
+                class="field-txt" 
+                placeholder="e.g. Bengaluru, India (or Remote)" 
+              />
+            </div>
+            <div class="field-group flex-1">
+              <label class="field-lbl">Email Address</label>
+              <input 
+                type="text" 
+                v-model="parsedCandidate.email" 
+                class="field-txt" 
+                placeholder="e.g. candidate@example.com" 
+              />
+            </div>
+          </div>
+
+          <!-- Skills Manager -->
+          <div class="field-group">
+            <div class="skills-lbl-row">
+              <label class="field-lbl">Technical Skills & Competencies</label>
+              <span class="skills-hint">Click × to remove, or type below to add custom skills</span>
+            </div>
+
+            <div class="preview-skills-row">
+              <span v-for="(skill, index) in parsedCandidate.skills" :key="skill" class="detected-skill-chip">
+                <span>{{ skill }}</span>
+                <button class="remove-chip-btn" @click.stop="removeSkill(index)" title="Remove skill">×</button>
+              </span>
+              <span v-if="!parsedCandidate.skills || parsedCandidate.skills.length === 0" class="no-skills-hint">
+                No skills detected. Add skills below to power AI matching.
+              </span>
+            </div>
+
+            <!-- Add Skill Input -->
+            <div class="add-skill-row">
+              <input 
+                type="text" 
+                v-model="newSkillInput" 
+                placeholder="Type a skill (e.g. Laravel, Vue 3, Docker) & press Enter..." 
+                @keyup.enter="addCustomSkill"
+                class="add-skill-input"
+              />
+              <button class="btn btn-sm btn-accent add-skill-btn" @click="addCustomSkill" :disabled="!newSkillInput.trim()">
+                + Add Skill
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -122,7 +196,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
           </svg>
-          <span>Apply & Re-Rank All Jobs</span>
+          <span>Apply & Re-Rank All Jobs ⚡</span>
         </button>
       </div>
     </div>
@@ -140,6 +214,7 @@ const rawResumeText = ref('');
 const uploadedFileName = ref('');
 const selectedPreset = ref(null);
 const fileInputRef = ref(null);
+const newSkillInput = ref('');
 
 const presets = {
   php: { role: 'PHP / Laravel Specialist', icon: '🐘', data: PRESET_RESUMES.php },
@@ -157,7 +232,6 @@ const loadPreset = (key) => {
 
   parsedCandidate.value = JSON.parse(JSON.stringify(preset));
 
-  // Serialize into text
   rawResumeText.value = [
     preset.name,
     preset.headline,
@@ -176,7 +250,23 @@ const loadPreset = (key) => {
 
 const parseCurrentText = () => {
   selectedPreset.value = null;
-  parsedCandidate.value = resumeService.parseRawText(rawResumeText.value);
+  parsedCandidate.value = resumeService.parseRawText(rawResumeText.value, uploadedFileName.value);
+};
+
+const removeSkill = (index) => {
+  if (parsedCandidate.value.skills) {
+    parsedCandidate.value.skills.splice(index, 1);
+  }
+};
+
+const addCustomSkill = () => {
+  const val = newSkillInput.value.trim();
+  if (!val) return;
+  if (!parsedCandidate.value.skills) parsedCandidate.value.skills = [];
+  if (!parsedCandidate.value.skills.some(s => s.toLowerCase() === val.toLowerCase())) {
+    parsedCandidate.value.skills.push(val);
+  }
+  newSkillInput.value = '';
 };
 
 const handleFileSelected = (e) => {
@@ -193,14 +283,46 @@ const handleDrop = (e) => {
 
 const readFileContent = (file) => {
   uploadedFileName.value = file.name;
-  const reader = new FileReader();
 
+  // JSON Resume format
+  if (file.name.endsWith('.json')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      rawResumeText.value = e.target.result || '';
+      parseCurrentText();
+    };
+    reader.readAsText(file);
+    return;
+  }
+
+  // PDF file format (extract clean ASCII text strings from stream)
+  if (file.name.endsWith('.pdf')) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const buffer = e.target.result;
+      const uint8 = new Uint8Array(buffer);
+      let text = '';
+      for (let i = 0; i < uint8.length; i++) {
+        const c = uint8[i];
+        if ((c >= 32 && c <= 126) || c === 10 || c === 13) {
+          text += String.fromCharCode(c);
+        } else if (text.length && text[text.length - 1] !== ' ') {
+          text += ' ';
+        }
+      }
+      rawResumeText.value = text;
+      parseCurrentText();
+    };
+    reader.readAsArrayBuffer(file);
+    return;
+  }
+
+  // Text / Markdown
+  const reader = new FileReader();
   reader.onload = (e) => {
-    let content = e.target.result || '';
-    rawResumeText.value = content;
+    rawResumeText.value = e.target.result || '';
     parseCurrentText();
   };
-
   reader.readAsText(file);
 };
 
@@ -213,7 +335,7 @@ const applyParsedResume = () => {
 onMounted(() => {
   const current = resumeService.getMasterResume();
   if (current) {
-    parsedCandidate.value = current;
+    parsedCandidate.value = JSON.parse(JSON.stringify(current));
     rawResumeText.value = [
       current.name,
       current.headline,
@@ -242,7 +364,9 @@ onMounted(() => {
 
 .upload-modal {
   width: 100%;
-  max-width: 680px;
+  max-width: 720px;
+  max-height: 90vh;
+  overflow-y: auto;
   background: linear-gradient(180deg, rgba(16, 23, 38, 0.96) 0%, rgba(10, 15, 26, 0.98) 100%);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--radius-xl);
@@ -250,14 +374,13 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  box-shadow: 0 25px 65px rgba(0, 0, 0, 0.85), 0 0 50px rgba(16, 185, 129, 0.1);
-  max-height: 90vh;
-  overflow-y: auto;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(56, 189, 248, 0.12);
 }
 
+/* Header */
 .modal-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
 }
 
@@ -271,49 +394,40 @@ onMounted(() => {
   width: 42px;
   height: 42px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
-  box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
 }
 
 .modal-title {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #f8fafc;
+  color: #ffffff;
 }
 
 .modal-subtitle {
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
 }
 
 .close-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
-  border-radius: var(--radius-full);
-  width: 30px;
-  height: 30px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
+  padding: 0.35rem;
 }
+.close-btn:hover { color: #ffffff; }
 
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-}
-
-/* Presets Section */
+/* Presets */
 .presets-section {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.5rem;
 }
 
 .presets-label {
@@ -326,55 +440,49 @@ onMounted(() => {
 
 .presets-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.5rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
 }
 
-@media (max-width: 600px) {
-  .presets-grid { grid-template-columns: 1fr; }
+@media (max-width: 640px) {
+  .presets-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 .preset-btn {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
-  padding: 0.5rem 0.75rem;
+  padding: 0.6rem 0.65rem;
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.5rem;
   cursor: pointer;
   text-align: left;
   transition: all var(--transition-fast);
 }
 
 .preset-btn:hover {
-  background: rgba(56, 189, 248, 0.08);
-  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .preset-btn.active {
-  background: rgba(16, 185, 129, 0.14);
-  border-color: #10b981;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
 }
 
-.preset-icon { font-size: 1.25rem; }
-
-.preset-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-
-.preset-name { font-size: 0.8rem; font-weight: 700; color: #f8fafc; }
-.preset-role { font-size: 0.68rem; color: var(--text-muted); }
+.preset-icon { font-size: 1.15rem; }
+.preset-text { display: flex; flex-direction: column; min-width: 0; }
+.preset-name { font-size: 0.76rem; font-weight: 700; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.preset-role { font-size: 0.64rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* Tabs */
 .input-tabs {
   display: flex;
   gap: 0.5rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding-bottom: 0.4rem;
+  padding-bottom: 0.5rem;
 }
 
 .tab-btn {
@@ -383,59 +491,60 @@ onMounted(() => {
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-secondary);
-  padding: 0.35rem 0.65rem;
+  padding: 0.4rem 0.85rem;
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
+.tab-btn:hover { color: #ffffff; }
 .tab-btn.active {
-  background: rgba(255, 255, 255, 0.09);
-  color: #38bdf8;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
 }
 
 /* Dropzone */
 .dropzone-area {
-  border: 2px dashed rgba(56, 189, 248, 0.35);
+  border: 2px dashed rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-lg);
   padding: 1.75rem 1rem;
   text-align: center;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.25);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .dropzone-area:hover {
   border-color: #38bdf8;
-  background: rgba(56, 189, 248, 0.04);
+  background: rgba(56, 189, 248, 0.03);
 }
 
 .hidden-file-input { display: none; }
 
+.dropzone-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .upload-icon-circle {
-  width: 50px;
-  height: 50px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  background: rgba(56, 189, 248, 0.12);
+  background: rgba(56, 189, 248, 0.1);
   color: #38bdf8;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 0.75rem;
+  margin-bottom: 0.25rem;
 }
 
-.drop-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #f8fafc;
-}
-
+.drop-title { font-size: 0.95rem; font-weight: 700; color: #ffffff; }
 .text-accent { color: #38bdf8; text-decoration: underline; }
-.drop-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+.drop-hint { font-size: 0.74rem; color: var(--text-muted); }
 
 .uploaded-badge {
-  display: inline-block;
-  margin-top: 0.65rem;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 700;
@@ -444,148 +553,265 @@ onMounted(() => {
   border: 1px solid rgba(16, 185, 129, 0.35);
   padding: 0.2rem 0.6rem;
   border-radius: var(--radius-full);
+  margin-top: 0.35rem;
 }
 
-/* Paste Area */
+/* Paste Textarea */
 .raw-textarea {
   width: 100%;
-  height: 140px;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 120px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-md);
   padding: 0.75rem;
-  color: #f1f5f9;
+  color: #cbd5e1;
   font-size: 0.8rem;
-  line-height: 1.5;
   resize: vertical;
-  outline: none;
+  line-height: 1.45;
 }
+.raw-textarea:focus { outline: none; border-color: #38bdf8; }
 
-.raw-textarea:focus {
-  border-color: #38bdf8;
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
-}
-
-/* Extracted Preview */
+/* Extracted Preview & Fine-Tune Editor */
 .extracted-preview-box {
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: var(--radius-md);
-  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
 }
 
 .preview-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.badge-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
 .preview-badge {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   font-weight: 800;
-  color: #34d399;
-  letter-spacing: 0.05em;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+}
+
+.verify-note {
+  font-size: 0.7rem;
+  color: var(--text-muted);
 }
 
 .skills-count {
   font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-.preview-candidate-row {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.preview-avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, #10b981, #06b6d4);
-  color: #ffffff;
-  font-size: 1.1rem;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.preview-meta {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.25;
-}
-
-.preview-name-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.preview-name {
-  font-size: 1.05rem;
-  color: #f8fafc;
-}
-
-.preview-exp-badge {
-  font-size: 0.65rem;
-  background: rgba(56, 189, 248, 0.15);
-  color: #38bdf8;
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
+  color: #34d399;
   font-weight: 700;
 }
 
-.preview-headline {
-  font-size: 0.78rem;
-  color: #cbd5e1;
+/* Form Fields */
+.edit-meta-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-.preview-loc {
+.field-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+@media (max-width: 580px) {
+  .field-row { flex-direction: column; }
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.flex-1 { flex: 1; }
+.flex-2 { flex: 2; }
+
+.field-lbl {
   font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.field-txt {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  color: #f8fafc;
+  transition: all var(--transition-fast);
+}
+
+.field-txt:focus {
+  outline: none;
+  border-color: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+}
+
+.text-emerald { color: #34d399; font-weight: 600; }
+
+.exp-input-wrap {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.exp-input-wrap .field-txt {
+  width: 100%;
+  padding-right: 2.2rem;
+}
+
+.exp-unit {
+  position: absolute;
+  right: 0.75rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* Skills Manager */
+.skills-lbl-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.skills-hint {
+  font-size: 0.68rem;
   color: var(--text-muted);
 }
 
 .preview-skills-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.4rem;
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 0.4rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .detected-skill-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  background: rgba(16, 185, 129, 0.12);
+  font-size: 0.7rem;
+  font-weight: 700;
   color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full);
 }
+
+.remove-chip-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.remove-chip-btn:hover { color: #f43f5e; }
 
 .no-skills-hint {
   font-size: 0.75rem;
   color: var(--text-muted);
-  font-style: italic;
+  padding: 0.5rem;
+}
+
+.add-skill-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.add-skill-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-sm);
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8rem;
+  color: #ffffff;
+}
+
+.add-skill-input:focus {
+  outline: none;
+  border-color: #34d399;
+}
+
+.add-skill-btn {
+  background: rgba(52, 211, 153, 0.18);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  color: #34d399;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.add-skill-btn:hover {
+  background: rgba(52, 211, 153, 0.3);
 }
 
 /* Actions */
 .modal-actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .btn-apply-rank {
   background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
   color: #ffffff;
   font-weight: 700;
-  padding: 0.6rem 1.25rem;
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+}
+
+.btn-apply-rank:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
 }
 </style>

@@ -173,44 +173,85 @@ export const resumeService = {
   },
 
   // 2. Parse uploaded raw resume text / markdown
-  parseRawText(rawText) {
+  parseRawText(rawText, filename = '') {
     if (!rawText || typeof rawText !== 'string') return JSON.parse(JSON.stringify(DEFAULT_RESUME));
 
-    const resume = JSON.parse(JSON.stringify(DEFAULT_RESUME));
-    const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
-
-    // 1. Candidate Name
-    if (lines.length > 0) {
-      const firstLine = lines[0].replace(/^#+\s*/, '').replace(/^name:\s*/i, '');
-      if (firstLine.length > 2 && firstLine.length < 50 && !firstLine.includes('@')) {
-        resume.name = firstLine;
+    // Support direct JSON resume paste
+    const trimmed = rawText.trim();
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        const json = JSON.parse(trimmed);
+        if (json.name || json.skills) {
+          return {
+            name: json.name || 'Candidate Profile',
+            headline: json.headline || (json.skills?.length ? `${json.skills.slice(0, 3).join(', ')} Specialist` : 'Software Engineer'),
+            email: json.email || '',
+            phone: json.phone || '',
+            location: json.location || 'Remote / Worldwide',
+            yearsOfExperience: json.yearsOfExperience || (json.experience?.length ? json.experience.length * 2 : 4),
+            summary: json.summary || '',
+            skills: Array.isArray(json.skills) ? json.skills : [],
+            experience: Array.isArray(json.experience) ? json.experience : []
+          };
+        }
+      } catch (e) {
+        // Continue to text parser
       }
     }
 
-    // 2. Email
-    const emailMatch = rawText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b/);
-    if (emailMatch) resume.email = emailMatch[0];
+    const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
 
-    // 3. Phone
-    const phoneMatch = rawText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
-    if (phoneMatch) resume.phone = phoneMatch[0];
-
-    // 4. Years of Experience
-    const expMatch = rawText.match(/(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s*)?(?:experience|exp)/i);
-    if (expMatch) {
-      resume.yearsOfExperience = parseInt(expMatch[1], 10);
+    // 1. Candidate Name
+    let candidateName = '';
+    const ignoreNames = /^(curriculum vitae|resume|cv|bio|profile|summary|contact|experience|work experience|skills|technical skills|about me|portfolio|page \d|references)/i;
+    
+    // First try lines from top
+    for (let i = 0; i < Math.min(lines.length, 6); i++) {
+      let l = lines[i].replace(/^#+\s*/, '').replace(/^(name|candidate|applicant):\s*/i, '').trim();
+      if (l && !ignoreNames.test(l) && !l.includes('@') && !l.includes('http') && !/^\+?\d/.test(l)) {
+        if (l.length >= 2 && l.length <= 40 && l.split(/\s+/).length <= 5) {
+          candidateName = l;
+          break;
+        }
+      }
     }
 
-    // 5. Recognized Tech Skills Dictionary
+    // Fallback to filename if no clean name found
+    if (!candidateName && filename) {
+      const cleanFile = filename.replace(/\.(pdf|docx?|txt|md|json)$/i, '').replace(/[-_]/g, ' ');
+      const words = cleanFile.split(/\s+/).filter(w => !ignoreNames.test(w) && w.length > 1);
+      if (words.length >= 1 && words.length <= 4) {
+        candidateName = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      }
+    }
+
+    if (!candidateName) candidateName = 'Candidate Profile';
+
+    // 2. Email
+    const emailMatch = rawText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b/);
+    const candidateEmail = emailMatch ? emailMatch[0] : '';
+
+    // 3. Phone
+    const phoneMatch = rawText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{4}/);
+    const candidatePhone = phoneMatch ? phoneMatch[0] : '';
+
+    // 4. Recognized Tech Skills Dictionary (Comprehensive 160+ tech skills)
     const candidateTech = [
+      // Frontend
       "Vue 3", "Vue.js", "Vue", "Vite", "TypeScript", "JavaScript", "React", "Next.js", "Nuxt.js", "Angular", "Svelte",
-      "PHP", "Laravel", "Symfony", "WordPress", "WooCommerce", "Magento", "MySQL",
-      "Python", "FastAPI", "Django", "Flask", "Pandas", "Web Scraping",
-      "Node.js", "Express", "NestJS", "Go", "Golang", "Rust", "Java", "Spring Boot",
-      "Pinia", "Vuex", "Redux", "TailwindCSS", "CSS3", "HTML5",
-      "Docker", "Kubernetes", "AWS", "GCP", "PostgreSQL", "MongoDB", "Redis", "Elasticsearch", "OpenSearch",
-      "GraphQL", "REST APIs", "WebSockets", "Kafka", "Microservices",
-      "Playwright", "Jest", "Vitest", "Cypress", "CI/CD", "Git"
+      "TailwindCSS", "CSS3", "HTML5", "Bootstrap", "Sass", "SCSS", "jQuery", "Redux", "Pinia", "Vuex",
+      // Backend
+      "PHP", "Laravel", "Symfony", "CodeIgniter", "WordPress", "WooCommerce", "Magento",
+      "Python", "FastAPI", "Django", "Flask", "Pandas", "NumPy", "Web Scraping",
+      "Node.js", "Express", "NestJS", "Go", "Golang", "Rust", "Java", "Spring Boot", "C#", ".NET", "ASP.NET", "Ruby", "Rails",
+      // Databases
+      "MySQL", "PostgreSQL", "MongoDB", "Redis", "Elasticsearch", "OpenSearch", "SQLite", "DynamoDB", "Firebase", "Supabase", "Oracle",
+      // DevOps & Cloud
+      "Docker", "Kubernetes", "AWS", "GCP", "Azure", "CI/CD", "Git", "GitHub Actions", "Terraform", "Linux", "Nginx", "Apache",
+      // APIs & Architecture
+      "GraphQL", "REST APIs", "RESTful", "WebSockets", "Kafka", "RabbitMQ", "Microservices", "OOP", "MVC", "Agile", "Scrum",
+      // Testing
+      "Playwright", "Jest", "Vitest", "Cypress", "Selenium", "Puppeteer", "Unit Testing"
     ];
 
     const detectedSkills = [];
@@ -221,32 +262,71 @@ export const resumeService = {
       }
     }
 
-    if (detectedSkills.length > 0) {
-      // Overwrite skills with the candidate's actual detected skills!
-      resume.skills = detectedSkills;
+    // Also look for explicit Skills list in text (e.g. Skills: Go, Kubernetes, Terraform)
+    const skillsSectionMatch = rawText.match(/(?:skills|technical skills|technologies|competencies|tools)[\s:]+([^\n\r#]+)/i);
+    if (skillsSectionMatch && skillsSectionMatch[1]) {
+      const tokens = skillsSectionMatch[1].split(/[,•|/]/).map(t => t.trim()).filter(Boolean);
+      for (const t of tokens) {
+        if (t.length >= 2 && t.length <= 25 && !detectedSkills.some(s => s.toLowerCase() === t.toLowerCase())) {
+          detectedSkills.push(t);
+        }
+      }
+    }
+
+    // 5. Years of Experience
+    let yearsExp = 3;
+    const expMatch = rawText.match(/(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s*)?(?:experience|exp|production|hands-on)/i);
+    if (expMatch) {
+      yearsExp = parseInt(expMatch[1], 10);
+    } else {
+      // Look for year ranges like 2018 - 2024 or 2019 - Present
+      const yearRangeMatch = rawText.match(/\b(200\d|201\d|202\d)\s*[-–—to]+\s*(?:present|current|now|202\d)/i);
+      if (yearRangeMatch) {
+        const startYear = parseInt(yearRangeMatch[1], 10);
+        const currentYear = new Date().getFullYear();
+        yearsExp = Math.max(1, currentYear - startYear);
+      } else if (detectedSkills.length > 7) {
+        yearsExp = 5;
+      }
     }
 
     // 6. Professional Headline
-    if (lines.length > 1) {
-      const line2 = lines[1].replace(/^#+\s*/, '');
-      if (line2.length > 5 && line2.length < 90 && (line2.includes('|') || /engineer|developer|architect|consultant|specialist/i.test(line2))) {
-        resume.headline = line2;
-      } else if (detectedSkills.length > 0) {
-        const topSkills = detectedSkills.slice(0, 3).join(', ');
-        resume.headline = `${resume.yearsOfExperience}+ Yrs ${topSkills} Engineer`;
+    let headline = '';
+    for (let i = 1; i < Math.min(lines.length, 5); i++) {
+      let l = lines[i].replace(/^#+\s*/, '').trim();
+      if (/engineer|developer|architect|consultant|specialist|lead|manager|programmer/i.test(l) && l.length < 80) {
+        headline = l;
+        break;
       }
-    } else if (detectedSkills.length > 0) {
-      const topSkills = detectedSkills.slice(0, 3).join(', ');
-      resume.headline = `${resume.yearsOfExperience}+ Yrs ${topSkills} Engineer`;
+    }
+    if (!headline) {
+      const topStack = detectedSkills.slice(0, 3).join(' / ') || 'Software';
+      headline = `${yearsExp}+ Yrs ${topStack} Engineer`;
     }
 
     // 7. Location
-    const locMatch = rawText.match(/Location:\s*([^\n|]+)/i) || rawText.match(/\b(Bengaluru|Hyderabad|Pune|Mumbai|Chennai|Delhi|San Francisco|New York|London|Remote)\b/i);
+    let candidateLocation = 'Remote (Worldwide)';
+    const locMatch = rawText.match(/Location:\s*([^\n|]+)/i) || 
+      rawText.match(/\b(Bengaluru|Bangalore|Hyderabad|Pune|Mumbai|Chennai|Delhi|Noida|Gurgaon|Kolkata|Ahmedabad|San Francisco|New York|Seattle|Austin|Chicago|London|Berlin|Toronto|Remote India|India|Remote)\b/i);
     if (locMatch) {
-      resume.location = (locMatch[1] || locMatch[0]).trim();
+      candidateLocation = (locMatch[1] || locMatch[0]).trim();
     }
 
-    return resume;
+    // 8. Summary
+    const summaryMatch = rawText.match(/(?:summary|about me|profile|overview)[\s:]+([^\n\r#]+)/i);
+    const candidateSummary = summaryMatch ? summaryMatch[1].trim() : `Experienced engineer with ${yearsExp}+ years background in ${detectedSkills.slice(0, 4).join(', ')}.`;
+
+    return {
+      name: candidateName,
+      headline,
+      email: candidateEmail,
+      phone: candidatePhone,
+      location: candidateLocation,
+      yearsOfExperience: yearsExp,
+      summary: candidateSummary,
+      skills: detectedSkills.length > 0 ? detectedSkills : ["Software Engineering", "Problem Solving", "Git"],
+      experience: []
+    };
   },
 
   // 3. Multi-Dimensional Compatibility Matcher

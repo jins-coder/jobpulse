@@ -5,9 +5,7 @@
       :current-view="currentView"
       :total-jobs="jobs.length"
       :tracked-count="trackedCount"
-      :is-scraping="isScraping"
       @change-view="switchView"
-      @quick-scrape="triggerQuickScrape"
       @export="handleExport"
       @edit-resume="openResumeEditor"
       @open-auth="showAuthModal = true"
@@ -18,56 +16,38 @@
     <main class="main-content">
       <WhatItBrokeErrorBoundary :inline-fallback="true">
         <!-- 1. Job Explorer -->
-      <JobFinder 
-        v-if="currentView === 'explorer'"
-        :jobs="jobs"
-        @select-job="openJobDetail"
-        @toggle-save="toggleJobSave"
-        @request-scrape="handleRequestScrapeFromFinder"
-        @easy-apply="openEasyApply"
-        @edit-resume="openResumeEditor"
-        @resume-updated="handleResumeUpdated"
-      />
+        <JobFinder 
+          v-if="currentView === 'explorer'"
+          :jobs="jobs"
+          @select-job="openJobDetail"
+          @toggle-save="toggleJobSave"
+          @easy-apply="openEasyApply"
+          @edit-resume="openResumeEditor"
+          @resume-updated="handleResumeUpdated"
+        />
 
-      <!-- 2. Scraper Dashboard -->
-      <ScraperDashboard 
-        v-else-if="currentView === 'scraper'"
-        :is-scraping="isScraping"
-        :is-paused="isPaused"
-        :progress="crawlProgress"
-        :stats="crawlStats"
-        :logs="logs"
-        @start-scrape="startScrapingPipeline"
-        @pause-scrape="pauseScraper"
-        @resume-scrape="resumeScraper"
-        @abort-scrape="abortScraper"
-        @clear-logs="logs = []"
-        @reset-defaults="resetSeedData"
-        @clear-jobs="clearAllJobs"
-      />
+        <!-- 2. ATS Resume Optimizer & Parser Hub -->
+        <AtsChecker 
+          v-else-if="currentView === 'ats'"
+          :jobs="jobs"
+          @resume-updated="handleResumeUpdated"
+          @show-toast="showToast"
+        />
 
-      <!-- 3. Job Tracker Pipeline -->
-      <JobTracker 
-        v-else-if="currentView === 'tracker'"
-        :jobs="jobs"
-        @select-job="openJobDetail"
-        @change-status="updateJobStatus"
-        @easy-apply="openEasyApply"
-      />
+        <!-- 3. Market Insights & Analytics -->
+        <MarketInsights 
+          v-else-if="currentView === 'insights'"
+          :jobs="jobs"
+        />
 
-      <!-- 4. ATS Resume Optimizer & Parser Hub -->
-      <AtsChecker 
-        v-else-if="currentView === 'ats'"
-        :jobs="jobs"
-        @resume-updated="handleResumeUpdated"
-        @show-toast="showToast"
-      />
-
-      <!-- 5. Market Insights & Analytics -->
-      <MarketInsights 
-        v-else-if="currentView === 'insights'"
-        :jobs="jobs"
-      />
+        <!-- 4. Job Tracker Pipeline -->
+        <JobTracker 
+          v-else-if="currentView === 'tracker'"
+          :jobs="jobs"
+          @select-job="openJobDetail"
+          @change-status="updateJobStatus"
+          @easy-apply="openEasyApply"
+        />
       </WhatItBrokeErrorBoundary>
     </main>
 
@@ -111,7 +91,6 @@ import HeaderNav from './components/HeaderNav.vue';
 import JobFinder from './components/JobFinder.vue';
 import JobCard from './components/JobCard.vue';
 import JobDetailModal from './components/JobDetailModal.vue';
-import ScraperDashboard from './components/ScraperDashboard.vue';
 import JobTracker from './components/JobTracker.vue';
 import MarketInsights from './components/MarketInsights.vue';
 import EasyApplyModal from './components/EasyApplyModal.vue';
@@ -119,24 +98,16 @@ import AuthModal from './components/AuthModal.vue';
 import AtsChecker from './components/AtsChecker.vue';
 import { WhatItBrokeErrorBoundary } from '@whatitbroke/vue';
 import { storageService } from './services/storageService.js';
-import { ScraperRunner } from './services/scraperService.js';
 import { authService } from './services/authService.js';
+import { dbService } from './services/dbService.js';
 
 // App State
-const currentView = ref('insights'); // 'explorer' | 'scraper' | 'tracker' | 'ats' | 'insights'
+const currentView = ref('explorer'); // 'explorer' | 'ats' | 'insights' | 'tracker'
 const jobs = ref([]);
 const selectedJob = ref(null);
 const easyApplyJob = ref(null);
 const showAuthModal = ref(false);
 const toastMessage = ref('');
-
-// Scraper Engine State
-const isScraping = ref(false);
-const isPaused = ref(false);
-const crawlProgress = ref({ percent: 0, currentPlatform: '', currentPage: 1, totalPages: 2, totalJobs: 0 });
-const crawlStats = ref({ requestsSent: 0, nodesEvaluated: 0, jobsExtracted: 0, errorsCount: 0 });
-const logs = ref([]);
-let currentRunner = null;
 
 const trackedCount = computed(() => {
   return jobs.value.filter(j => !!j.status).length;
@@ -199,23 +170,41 @@ const handleApplicationSubmitted = ({ job, application }) => {
   jobs.value = storageService.getJobs();
   showToast(`⚡ Easy Apply successfully submitted for ${job.title} @ ${job.company}! (${application.matchScore}% Match)`);
   easyApplyJob.value = null;
+
+  // Background Cloud Indexing
+  dbService.saveApplication(application).catch(e => {
+    console.warn('[App] Background cloud save warning:', e.message);
+  });
 };
 
 const toggleJobSave = (job) => {
-  const newStatus = job.status ? null : 'saved';
-  updateJobStatus({ jobId: job.id, status: newStatus });
-  showToast(newStatus ? `Saved "${job.title}" to tracker!` : `Removed from tracker.`);
+  const newStatus = job.status === 'saved' ? null : 'saved';
+  updateJobStatus({ job, status: newStatus });
 };
 
-const updateJobStatus = ({ jobId, status }) => {
-  const updated = storageService.updateJobStatus(jobId, status);
-  if (updated) {
-    const idx = jobs.value.findIndex(j => j.id === jobId);
-    if (idx !== -1) {
-      jobs.value[idx].status = status;
-      if (selectedJob.value && selectedJob.value.id === jobId) {
-        selectedJob.value.status = status;
-      }
+const updateJobStatus = async ({ job, status }) => {
+  const updatedList = storageService.updateJobStatus(job.id, status);
+  jobs.value = updatedList;
+
+  if (selectedJob.value && selectedJob.value.id === job.id) {
+    selectedJob.value = { ...selectedJob.value, status };
+  }
+
+  showToast(status ? `Job status updated: ${status.toUpperCase()}` : 'Removed from tracker');
+
+  if (status) {
+    try {
+      await dbService.saveApplication({
+        id: `app-${job.id}`,
+        jobId: job.id,
+        jobTitle: job.title,
+        company: job.company,
+        platform: job.platform,
+        status: status,
+        appliedAt: new Date().toISOString()
+      });
+    } catch (e) {
+      console.warn('[App] Status sync warning:', e.message);
     }
   }
 };
@@ -229,96 +218,6 @@ const handleExport = (format) => {
     showToast(`Exported ${jobs.value.length} jobs to JSON.`);
   }
 };
-
-const resetSeedData = () => {
-  jobs.value = storageService.resetDefaultJobs();
-  showToast('Reset jobs database to initial seed listings.');
-};
-
-const clearAllJobs = () => {
-  jobs.value = storageService.clearAllJobs();
-  showToast('Cleared all scraped jobs from local database.');
-};
-
-// Scraper Controls
-const triggerQuickScrape = () => {
-  switchView('scraper');
-  startScrapingPipeline({
-    query: 'Vue developer',
-    location: 'Remote',
-    platforms: ['LinkedIn', 'RemoteOK', 'Indeed'],
-    pagesPerPlatform: 1,
-    scrapeMode: 'hybrid'
-  });
-};
-
-const handleRequestScrapeFromFinder = ({ query, location }) => {
-  switchView('scraper');
-  startScrapingPipeline({
-    query: query || 'Vue developer',
-    location: location || 'Remote',
-    platforms: ['LinkedIn', 'RemoteOK', 'Indeed', 'WeWorkRemotely'],
-    pagesPerPlatform: 2,
-    scrapeMode: 'hybrid'
-  });
-};
-
-const startScrapingPipeline = (options) => {
-  if (isScraping.value) return;
-
-  isScraping.value = true;
-  isPaused.value = false;
-  crawlProgress.value = { percent: 0, currentPlatform: 'Starting', currentPage: 1, totalPages: options.pagesPerPlatform || 2, totalJobs: 0 };
-  crawlStats.value = { requestsSent: 0, nodesEvaluated: 0, jobsExtracted: 0, errorsCount: 0 };
-
-  currentRunner = new ScraperRunner(options);
-
-  currentRunner
-    .onLog((entry) => {
-      logs.value.push(entry);
-    })
-    .onProgress((p) => {
-      crawlProgress.value = p;
-      crawlStats.value.requestsSent = currentRunner.stats.requestsSent;
-      crawlStats.value.nodesEvaluated = currentRunner.stats.nodesEvaluated;
-      crawlStats.value.jobsExtracted = currentRunner.stats.jobsExtracted;
-    })
-    .onJobFound((newJob) => {
-      // Add dynamically to active state and localStorage
-      const result = storageService.addJobs([newJob]);
-      jobs.value = storageService.getJobs();
-    })
-    .onComplete(({ stats, jobs: newlyScraped }) => {
-      isScraping.value = false;
-      isPaused.value = false;
-      showToast(`Scrape complete! Successfully extracted ${stats.jobsExtracted} jobs.`);
-    });
-
-  currentRunner.start();
-};
-
-const pauseScraper = () => {
-  if (currentRunner) {
-    currentRunner.pause();
-    isPaused.value = true;
-  }
-};
-
-const resumeScraper = () => {
-  if (currentRunner) {
-    currentRunner.resume();
-    isPaused.value = false;
-  }
-};
-
-const abortScraper = () => {
-  if (currentRunner) {
-    currentRunner.abort();
-    isScraping.value = false;
-    isPaused.value = false;
-    showToast('Crawler sequence aborted.');
-  }
-};
 </script>
 
 <style scoped>
@@ -326,47 +225,6 @@ const abortScraper = () => {
   display: flex;
   flex-direction: column;
   flex: 1;
-}
-
-/* Debugger Banner Strip */
-.debugger-strip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1.25rem;
-  background: rgba(244, 63, 94, 0.08);
-  border: 1px dashed rgba(244, 63, 94, 0.35);
-  border-radius: var(--radius-md);
-  margin-bottom: 1.5rem;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.strip-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-}
-
-.strip-badge {
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--radius-sm);
-  background: rgba(244, 63, 94, 0.2);
-  color: #fda4af;
-  border: 1px solid rgba(244, 63, 94, 0.4);
-}
-
-.strip-text {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-}
-
-.lab-pill {
-  font-size: 1rem;
 }
 
 /* Toast */

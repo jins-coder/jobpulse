@@ -14,12 +14,8 @@
         </div>
         <div class="brand-info">
           <div class="brand-title">Job<span class="brand-accent">Pulse</span></div>
-          <div class="brand-subtitle">Web Scraper & Career Engine</div>
+          <div class="brand-subtitle">Smart Career & ATS Engine</div>
         </div>
-      </div>
-      <div class="engine-badge" :class="isScraping ? 'scraping' : 'ready'">
-        <span class="status-dot"></span>
-        <span class="status-text">{{ isScraping ? 'SCRAPING LIVE' : 'ENGINE READY' }}</span>
       </div>
     </div>
 
@@ -36,37 +32,6 @@
         </svg>
         <span>Job Explorer</span>
         <span class="tab-badge">{{ totalJobs }}</span>
-      </button>
-
-      <button 
-        class="nav-tab" 
-        :class="{ active: currentView === 'scraper' }"
-        @click="$emit('change-view', 'scraper')"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 2v20"/>
-          <path d="m17 5-5-3-5 3"/>
-          <path d="m17 19-5 3-5-3"/>
-          <path d="M2 12h20"/>
-          <path d="m5 7-3 5 3 5"/>
-          <path d="m19 7 3 5-3 5"/>
-        </svg>
-        <span>Scraper Engine</span>
-        <span v-if="isScraping" class="scraping-indicator">●</span>
-      </button>
-
-      <button 
-        class="nav-tab" 
-        :class="{ active: currentView === 'tracker' }"
-        @click="$emit('change-view', 'tracker')"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
-          <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/>
-          <path d="m9 14 2 2 4-4"/>
-        </svg>
-        <span>Tracker</span>
-        <span class="tab-badge" v-if="trackedCount > 0">{{ trackedCount }}</span>
       </button>
 
       <button 
@@ -94,6 +59,20 @@
           <line x1="6" y1="20" x2="6" y2="14"/>
         </svg>
         <span>Market Insights</span>
+      </button>
+
+      <button 
+        class="nav-tab" 
+        :class="{ active: currentView === 'tracker' }"
+        @click="$emit('change-view', 'tracker')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+          <path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/>
+          <path d="m9 14 2 2 4-4"/>
+        </svg>
+        <span>Tracker</span>
+        <span class="tab-badge" v-if="trackedCount > 0">{{ trackedCount }}</span>
       </button>
     </nav>
 
@@ -145,17 +124,6 @@
           </button>
         </div>
       </div>
-
-      <button 
-        class="btn btn-primary btn-sm"
-        @click="$emit('quick-scrape')"
-        :disabled="isScraping"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" :class="{ 'spin-icon': isScraping }">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-        </svg>
-        <span>{{ isScraping ? 'Scraping...' : 'Launch Scraper' }}</span>
-      </button>
     </div>
   </header>
 </template>
@@ -167,11 +135,10 @@ import { authService } from '../services/authService.js';
 const props = defineProps({
   currentView: { type: String, default: 'explorer' },
   totalJobs: { type: Number, default: 0 },
-  trackedCount: { type: Number, default: 0 },
-  isScraping: { type: Boolean, default: false }
+  trackedCount: { type: Number, default: 0 }
 });
 
-const emit = defineEmits(['change-view', 'quick-scrape', 'export', 'edit-resume', 'open-auth', 'user-logout']);
+const emit = defineEmits(['change-view', 'export', 'edit-resume', 'open-auth', 'user-logout']);
 
 const handleLogout = async () => {
   await authService.logout();

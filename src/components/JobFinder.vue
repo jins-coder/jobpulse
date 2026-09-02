@@ -49,16 +49,6 @@
           </svg>
           <span>Upload & Match</span>
         </button>
-
-        <button class="btn btn-primary search-action-btn" @click="$emit('request-scrape', { query: searchQuery, location: locationQuery })">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v20"/>
-            <path d="m17 5-5-3-5 3"/>
-            <path d="m17 19-5 3-5-3"/>
-            <path d="M2 12h20"/>
-          </svg>
-          <span>Scrape Keywords</span>
-        </button>
       </div>
 
       <!-- Advanced Filters Bar -->
@@ -248,13 +238,10 @@
       </div>
       <h3 class="empty-title">No matching jobs found</h3>
       <p class="empty-desc">
-        Try modifying your search filters or trigger the scraper engine to extract new job postings directly from LinkedIn, Indeed, and RemoteOK.
+        No active listings match your current keywords and filters. Try adjusting your query or resetting filters.
       </p>
       <div class="empty-actions">
-        <button class="btn btn-secondary" @click="resetFilters">Clear Active Filters</button>
-        <button class="btn btn-primary" @click="$emit('request-scrape', { query: searchQuery || 'Vue developer' })">
-          <span>Scrape "{{ searchQuery || 'Vue developer' }}" Jobs</span>
-        </button>
+        <button class="btn btn-primary" @click="resetFilters">Reset Filters</button>
       </div>
     </div>
 
@@ -278,7 +265,7 @@ const props = defineProps({
   jobs: { type: Array, default: () => [] }
 });
 
-const emit = defineEmits(['select-job', 'toggle-save', 'request-scrape', 'easy-apply', 'edit-resume', 'resume-updated']);
+const emit = defineEmits(['select-job', 'toggle-save', 'easy-apply', 'edit-resume', 'resume-updated']);
 
 const platforms = ['LinkedIn', 'Indeed', 'RemoteOK', 'WeWorkRemotely', 'Wellfound'];
 const levels = ['Entry', 'Mid', 'Senior', 'Lead'];

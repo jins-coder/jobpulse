@@ -1,7 +1,7 @@
 // Agentic AI & RAG Resume Parser Service for JobPulse
 // Integrates Retrieval-Augmented Generation (RAG) and Free Multi-Model AI (Puter.js / Free Serverless API / Local Agent)
 
-import { EMPTY_RESUME } from './resumeService.js';
+import { EMPTY_RESUME, resumeService } from './resumeService.js';
 
 // Comprehensive 250+ Tech Skills Ontology Indexed by Domain for RAG Retrieval
 export const TECH_ONTOLOGY = {
@@ -260,8 +260,9 @@ function localAgenticSynthesis(rawText, chunks, retrievedSkills, filename = '') 
     summary,
     yearsOfExperience: yearsExp,
     skills: retrievedSkills.length > 0 ? retrievedSkills : ['JavaScript', 'TypeScript', 'Web Architecture'],
-    experience: [],
-    education: []
+    experience: resumeService.extractWorkExperience(rawText),
+    education: [],
+    rawText
   };
 }
 

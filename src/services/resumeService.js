@@ -45,6 +45,13 @@ export const resumeService = {
       if (!parsed || !parsed.name || !parsed.isUploaded) {
         return null;
       }
+      // Auto-extract work experience if missing or empty but rawText exists
+      if ((!parsed.experience || parsed.experience.length === 0) && parsed.rawText) {
+        parsed.experience = this.extractWorkExperience(parsed.rawText);
+        if (parsed.experience.length > 0) {
+          this.saveMasterResume(parsed);
+        }
+      }
       return parsed;
     } catch (e) {
       console.error("Failed to load master resume", e);
@@ -225,6 +232,9 @@ export const resumeService = {
     const summaryMatch = rawText.match(/(?:summary|about me|profile|overview)[\s:]+([^\n\r#]+)/i);
     const candidateSummary = summaryMatch ? summaryMatch[1].trim() : `Experienced engineer with ${yearsExp}+ years background in ${detectedSkills.slice(0, 4).join(', ')}.`;
 
+    // I. Parse Professional Work Experience
+    const experience = this.extractWorkExperience(rawText);
+
     return {
       isUploaded: true,
       name: candidateName,
@@ -235,8 +245,119 @@ export const resumeService = {
       yearsOfExperience: yearsExp,
       summary: candidateSummary,
       skills: detectedSkills.length > 0 ? detectedSkills : ["Software Engineering", "Problem Solving", "Git"],
-      experience: []
+      experience,
+      rawText
     };
+  },
+
+  // Helper to extract professional experience roles & bullets from raw resume text
+  extractWorkExperience(rawText) {
+    if (!rawText) return [];
+    const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+
+    // 1. Locate the Experience section
+    let inExperience = false;
+    const experienceLines = [];
+
+    const expHeaderRegex = /^(?:professional\s+|work\s+|career\s+)?experience|employment\s+(?:history|record)|work\s+history/i;
+    const nextSectionRegex = /^(?:education|academic|technical\s+skills|skills|projects|certifications|credentials|languages|honors|publications|references)/i;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].replace(/^#+\s*/, '').replace(/[:\-_]+$/, '').trim();
+
+      if (!inExperience) {
+        if (line.length < 50 && expHeaderRegex.test(line)) {
+          inExperience = true;
+          continue;
+        }
+      } else {
+        if (line.length < 50 && nextSectionRegex.test(line)) {
+          break;
+        }
+        experienceLines.push(lines[i]);
+      }
+    }
+
+    // Fallback: If no explicit section header found, search for date ranges
+    const dateRegex = /\b(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+)?(?:20\d\d|19\d\d)\s*[-–—to]+\s*(?:present|current|now|(?:(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+)?(?:20\d\d|19\d\d))\b/i;
+    if (experienceLines.length === 0) {
+      const foundIdx = lines.findIndex(l => dateRegex.test(l));
+      if (foundIdx !== -1) {
+        experienceLines.push(...lines.slice(Math.max(0, foundIdx - 1), Math.min(lines.length, foundIdx + 35)));
+      }
+    }
+
+    if (experienceLines.length === 0) return [];
+
+    // Parse roles
+    const roles = [];
+    let currentRole = null;
+
+    for (let i = 0; i < experienceLines.length; i++) {
+      const line = experienceLines[i];
+      const dateMatch = line.match(dateRegex);
+
+      if (dateMatch) {
+        if (currentRole) {
+          roles.push(currentRole);
+        }
+
+        let titlePart = line.replace(dateMatch[0], '').replace(/[|•–—,-]+$/, '').trim();
+        let company = 'Enterprise Company';
+        let period = dateMatch[0].trim();
+
+        // Check if previous line had title or company
+        if (!titlePart && i > 0 && !experienceLines[i - 1].match(dateRegex) && !experienceLines[i - 1].startsWith('•')) {
+          titlePart = experienceLines[i - 1];
+        }
+
+        if (titlePart.includes(' at ')) {
+          const parts = titlePart.split(' at ');
+          titlePart = parts[0].trim();
+          company = parts[1].trim();
+        } else if (titlePart.includes(' | ')) {
+          const parts = titlePart.split(' | ');
+          titlePart = parts[0].trim();
+          company = parts.slice(1).join(' ').trim();
+        } else if (titlePart.includes(' - ')) {
+          const parts = titlePart.split(' - ');
+          titlePart = parts[0].trim();
+          company = parts.slice(1).join(' ').trim();
+        }
+
+        currentRole = {
+          title: titlePart || 'Senior Software Engineer',
+          company: company || 'Technology Solutions',
+          period,
+          location: 'Remote',
+          highlights: []
+        };
+      } else if (currentRole) {
+        if (line.startsWith('•') || line.startsWith('-') || line.startsWith('*')) {
+          const cleanBullet = line.replace(/^[•\-*]\s*/, '').trim();
+          if (cleanBullet) currentRole.highlights.push(cleanBullet);
+        } else if (line.length > 20) {
+          currentRole.highlights.push(line);
+        }
+      }
+    }
+
+    if (currentRole) {
+      roles.push(currentRole);
+    }
+
+    // If roles array still empty, package the text lines into a role
+    if (roles.length === 0 && experienceLines.length > 0) {
+      roles.push({
+        title: 'Senior Software Engineer',
+        company: 'Software Engineering Experience',
+        period: 'Recent',
+        location: 'Remote',
+        highlights: experienceLines.filter(l => l.length > 20).slice(0, 8)
+      });
+    }
+
+    return roles;
   },
 
   // 6. Dynamic Compatibility Matcher (Calculates against uploaded resume)
@@ -457,10 +578,16 @@ export const resumeService = {
     // Professional Experience
     lines.push('PROFESSIONAL WORK EXPERIENCE');
     lines.push('-'.repeat(78));
-    if (resume.experience && resume.experience.length) {
-      resume.experience.forEach(exp => {
+
+    let expList = resume.experience && resume.experience.length ? resume.experience : [];
+    if (expList.length === 0 && resume.rawText) {
+      expList = this.extractWorkExperience(resume.rawText);
+    }
+
+    if (expList.length > 0) {
+      expList.forEach(exp => {
         lines.push(`${exp.title || 'Senior Software Engineer'} | ${exp.company || 'Enterprise Solutions'}`);
-        lines.push(`${exp.period || '2021 - Present'} | ${exp.location || 'Remote'}`);
+        lines.push(`${exp.period || 'Recent'} | ${exp.location || 'Remote'}`);
         if (exp.highlights && exp.highlights.length) {
           exp.highlights.forEach(h => lines.push(`• ${h}`));
         } else if (exp.description) {
@@ -468,6 +595,11 @@ export const resumeService = {
         }
         lines.push('');
       });
+    } else if (resume.rawText) {
+      // Include extracted raw experience section if discrete roles were not isolated
+      const extractedLines = resume.rawText.split('\n').filter(l => l.trim().length > 20).slice(0, 15);
+      extractedLines.forEach(l => lines.push(`• ${l.trim()}`));
+      lines.push('');
     }
 
     // Education
@@ -494,6 +626,28 @@ export const resumeService = {
     }
 
     return lines.join('\n');
+  },
+
+  // 6. Generate Candidate's Original Resume Text Updated with Bridged Details
+  generateBridgedOriginalResume(resume, job = null) {
+    const raw = resume.rawText || this.formatResumeToText(resume, job);
+    if (!job) return raw;
+
+    const compatibility = this.computeCompatibility(job, resume);
+    const missing = compatibility.missingSkills || [];
+    const tailored = this.tailorResumeForJob(job, resume);
+
+    const banner = [
+      '='.repeat(78),
+      `OFFICIAL APPLICATION: ${job.title} at ${job.company}`,
+      `TAILORED PROFESSIONAL SUMMARY:`,
+      `${tailored.tailoredResume?.summary || resume.summary}`,
+      `BRIDGED TECHNICAL COMPETENCIES: ${(missing.slice(0, 4) || []).join(' • ')}`,
+      '='.repeat(78),
+      ''
+    ].join('\n');
+
+    return `${banner}\n${raw}`;
   },
 
   // 7. Find Top Confident Jobs for Candidate

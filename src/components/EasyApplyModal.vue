@@ -541,8 +541,11 @@
               >
                 <span>🚀 Complete Submission on {{ job.company }} ({{ job.platform }}) ↗</span>
               </a>
-              <button class="btn btn-secondary" @click="downloadTailoredResume">
-                📥 Download Tailored Resume (.txt)
+              <button class="btn btn-secondary" @click="downloadTailoredResume" title="Download clean ATS-formatted resume with bridged skills">
+                📥 ATS Resume (.txt)
+              </button>
+              <button class="btn btn-secondary" @click="downloadBridgedOriginalResume" title="Download your original resume updated with bridged skills">
+                📄 Original + Bridged (.txt)
               </button>
               <button class="btn btn-secondary" @click="copyFullPackage">
                 {{ copiedPackage ? '✓ Copied to Clipboard!' : '📋 Copy Cover Pitch & Resume' }}
@@ -583,13 +586,22 @@
             {{ copiedPackage ? '✓ Pitch Copied!' : '📋 Copy Cover Pitch' }}
           </button>
 
-          <!-- Download Tailored Resume -->
+          <!-- Download Tailored Resume (ATS Clean Format) -->
           <button 
             class="btn btn-secondary"
             @click="downloadTailoredResume"
-            title="Download resume tailored for this job"
+            title="Download ATS-formatted resume with bridged skills & experience"
           >
-            📥 Download Resume (.txt)
+            📥 ATS Resume (.txt)
+          </button>
+
+          <!-- Download Original Resume Updated with Bridged Skills -->
+          <button 
+            class="btn btn-secondary"
+            @click="downloadBridgedOriginalResume"
+            title="Download your original resume updated with bridged skills & tailored summary"
+          >
+            📄 Original + Bridged (.txt)
           </button>
 
           <!-- Primary Action: Apply on Official Site & Track -->
@@ -797,6 +809,23 @@ const downloadTailoredResume = () => {
   const safeTitle = (props.job.title || 'Role').replace(/[^a-zA-Z0-9_-]/g, '_');
   a.href = url;
   a.download = `${safeName}_${safeCompany}_${safeTitle}_Resume.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+const downloadBridgedOriginalResume = () => {
+  const r = masterResume.value;
+  const content = resumeService.generateBridgedOriginalResume(r, props.job);
+
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const safeName = (r.name || 'Candidate').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const safeCompany = (props.job.company || 'Company').replace(/[^a-zA-Z0-9_-]/g, '_');
+  a.href = url;
+  a.download = `${safeName}_Original_Updated_${safeCompany}_Resume.txt`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

@@ -191,23 +191,77 @@
       </div>
     </div>
 
+    <!-- Active Resume Matching Banner -->
+    <div v-if="hasResume" class="resume-match-banner glass-panel">
+      <div class="banner-left">
+        <div class="banner-icon-badge">🎯</div>
+        <div class="banner-text">
+          <div class="banner-title-row">
+            <span class="banner-title">Personalized feed for <strong>{{ activeResume.name }}</strong></span>
+            <span class="banner-status-badge">⚡ {{ sortBy === 'match-desc' ? 'Ranked by Resume Skills' : 'Resume Filter Active' }}</span>
+          </div>
+          <div class="banner-skills-chips">
+            <span v-for="skill in (activeResume.skills || []).slice(0, 8)" :key="skill" class="banner-skill-chip">
+              {{ skill }}
+            </span>
+            <span v-if="(activeResume.skills || []).length > 8" class="banner-skill-more">
+              +{{ (activeResume.skills || []).length - 8 }} more
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner-actions">
+        <button 
+          class="btn-banner-filter" 
+          :class="{ active: highMatchOnly }"
+          @click="highMatchOnly = !highMatchOnly"
+        >
+          <span v-if="highMatchOnly">✓ Showing 75%+ High Match</span>
+          <span v-else>⭐ Show 75%+ Match Only</span>
+        </button>
+        <button 
+          class="btn-banner-filter"
+          :class="{ active: sortBy === 'match-desc' }"
+          @click="sortBy = 'match-desc'"
+        >
+          🎯 Top Skills Match
+        </button>
+        <button class="btn-banner-edit" @click="showUploadModal = true">
+          Edit Resume
+        </button>
+      </div>
+    </div>
+
     <!-- Active Filter Summary & Result Count -->
     <div class="results-header">
       <div class="results-count-box">
-        Showing <strong class="text-white">{{ filteredJobs.length }}</strong> of {{ jobs.length }} scraped opportunities
+        Showing <strong class="text-white">{{ filteredJobs.length }}</strong> of {{ jobs.length }} live opportunities
+        <span class="live-pill">● LIVE FEEDS</span>
       </div>
 
-      <button 
-        v-if="hasActiveFilters" 
-        class="btn-reset-filters" 
-        @click="resetFilters"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-          <path d="M3 3v5h5"/>
-        </svg>
-        Reset Filters
-      </button>
+      <div class="results-actions">
+        <button 
+          class="btn-refresh-live" 
+          @click="$emit('refresh-jobs')"
+          title="Scrape and ingest latest live jobs from Remotive, Arbeitnow, and public feeds"
+        >
+          <span class="refresh-icon">⚡</span>
+          <span>Refresh Live Jobs</span>
+        </button>
+
+        <button 
+          v-if="hasActiveFilters" 
+          class="btn-reset-filters" 
+          @click="resetFilters"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          Reset Filters
+        </button>
+      </div>
     </div>
 
     <!-- Job Cards Grid / List -->
@@ -265,15 +319,30 @@ const props = defineProps({
   jobs: { type: Array, default: () => [] }
 });
 
-const emit = defineEmits(['select-job', 'toggle-save', 'easy-apply', 'edit-resume', 'resume-updated']);
+const emit = defineEmits(['select-job', 'toggle-save', 'easy-apply', 'edit-resume', 'resume-updated', 'refresh-jobs']);
 
-const platforms = ['LinkedIn', 'Indeed', 'RemoteOK', 'WeWorkRemotely', 'Wellfound'];
+const defaultPlatformOrder = [
+  'LinkedIn', 'Wellfound', 'Y Combinator', 'Naukri', 'Indeed', 
+  'RemoteOK', 'Remotive', 'WeWorkRemotely', 'Dice', 'HN Hiring', 'Instahyre', 'Glassdoor'
+];
+
+const platforms = computed(() => {
+  const extracted = new Set(props.jobs.map(j => j.platform).filter(Boolean));
+  const ordered = defaultPlatformOrder.filter(p => extracted.has(p));
+  for (const p of extracted) {
+    if (!ordered.includes(p)) ordered.push(p);
+  }
+  return ordered.length > 0 ? ordered : defaultPlatformOrder;
+});
+
 const levels = ['Entry', 'Mid', 'Senior', 'Lead'];
 const jobTypes = ['Full-time', 'Part-time'];
 
 // Candidate Resume & Upload Modal
 const activeResume = ref(resumeService.getMasterResume());
+const hasResume = computed(() => resumeService.hasUploadedResume(activeResume.value));
 const showUploadModal = ref(false);
+const highMatchOnly = ref(false);
 
 const handleResumeApplied = (newResume) => {
   activeResume.value = newResume;
@@ -289,7 +358,7 @@ const selectedLevel = ref('All');
 const selectedJobType = ref('All');
 const remoteOnly = ref(false);
 const minSalary = ref(0);
-const sortBy = ref('match-desc');
+const sortBy = ref(resumeService.hasUploadedResume(activeResume.value) ? 'match-desc' : 'newest');
 const viewMode = ref('grid');
 const suggestionPrompt = ref('');
 
@@ -307,6 +376,7 @@ const hasActiveFilters = computed(() => {
          selectedLevel.value !== 'All' || 
          selectedJobType.value !== 'All' || 
          remoteOnly.value || 
+         highMatchOnly.value ||
          minSalary.value > 0;
 });
 
@@ -318,7 +388,8 @@ const resetFilters = () => {
   selectedJobType.value = 'All';
   remoteOnly.value = false;
   minSalary.value = 0;
-  sortBy.value = 'newest';
+  highMatchOnly.value = false;
+  sortBy.value = hasResume.value ? 'match-desc' : 'newest';
 };
 
 const filteredJobs = computed(() => {
@@ -370,6 +441,14 @@ const filteredJobs = computed(() => {
   // 7. Apply AI User Suggestion Filter if active
   if (suggestionPrompt.value.trim()) {
     list = resumeService.getJobsBySuggestion(list, activeResume.value, suggestionPrompt.value.trim());
+  }
+
+  // 7b. High Match (75%+ Only) Filter
+  if (highMatchOnly.value && hasResume.value) {
+    list = list.filter(j => {
+      const comp = resumeService.computeCompatibility(j, activeResume.value);
+      return (comp.overallScore || 0) >= 75;
+    });
   }
 
   // 8. Sort
@@ -705,6 +784,141 @@ const filteredJobs = computed(() => {
   color: #ffffff;
 }
 
+/* Resume Match Banner */
+.resume-match-banner {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(56, 189, 248, 0.05));
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.banner-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex: 1;
+  min-width: 280px;
+}
+
+.banner-icon-badge {
+  font-size: 1.5rem;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.banner-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.banner-title {
+  font-size: 0.92rem;
+  color: #ffffff;
+}
+
+.banner-title strong {
+  color: #34d399;
+}
+
+.banner-status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.banner-skills-chips {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.banner-skill-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.banner-skill-more {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.btn-banner-filter {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-banner-filter:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btn-banner-filter.active {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #34d399;
+  color: #34d399;
+}
+
+.btn-banner-edit {
+  background: transparent;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-banner-edit:hover {
+  background: rgba(56, 189, 248, 0.15);
+}
+
 /* Results header */
 .results-header {
   display: flex;
@@ -714,8 +928,48 @@ const filteredJobs = computed(() => {
 }
 
 .results-count-box {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
   font-size: 0.88rem;
   color: var(--text-secondary);
+}
+
+.live-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.results-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-refresh-live {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-refresh-live:hover {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: #38bdf8;
 }
 
 .text-white {

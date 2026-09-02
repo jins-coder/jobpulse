@@ -100,4 +100,49 @@ B.S. in Computer Science | University of California (2015 - 2019)`
   });
 });
 
+// Agentic AI / RAG Resume Parsing Endpoint (Free Serverless Inference)
+router.post('/agentic-parse', async (req, res) => {
+  try {
+    const { prompt, rawText } = req.body || {};
+    const textToProcess = rawText || prompt || '';
+
+    if (!textToProcess) {
+      return res.status(400).json({ error: 'Text or prompt is required.' });
+    }
+
+    // Free Open Hugging Face Serverless Inference endpoint
+    try {
+      const hfResponse = await fetch('https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          inputs: prompt || `Extract JSON profile (name, email, phone, skills, yearsOfExperience) from resume:\n${textToProcess.slice(0, 1500)}`,
+          parameters: { max_new_tokens: 500, temperature: 0.1 }
+        })
+      });
+
+      if (hfResponse.ok) {
+        const hfData = await hfResponse.json();
+        const generated = Array.isArray(hfData) ? hfData[0]?.generated_text : hfData?.generated_text;
+        if (generated) {
+          return res.json({
+            status: 'success',
+            provider: 'HuggingFace Free Serverless',
+            resultText: generated
+          });
+        }
+      }
+    } catch (hfErr) {
+      // Fall through to deterministic response
+    }
+
+    return res.json({
+      status: 'fallback',
+      message: 'Client-side Agentic RAG engine active'
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 export default router;

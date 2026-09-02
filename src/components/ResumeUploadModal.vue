@@ -19,33 +19,16 @@
         <button class="close-btn" @click="$emit('close')">✕</button>
       </div>
 
-      <!-- Quick Test Presets -->
-      <div class="presets-section">
-        <span class="presets-label">⚡ 1-CLICK TEST DRIVE PRESETS:</span>
-        <div class="presets-grid">
-          <button 
-            v-for="(p, key) in presets" 
-            :key="key" 
-            class="preset-btn"
-            :class="{ active: selectedPreset === key }"
-            @click="loadPreset(key)"
-          >
-            <span class="preset-icon">{{ p.icon }}</span>
-            <div class="preset-text">
-              <span class="preset-name">{{ p.data.name }}</span>
-              <span class="preset-role">{{ p.role }}</span>
-            </div>
-          </button>
-        </div>
-      </div>
-
       <!-- Upload Dropzone & Text Tabs -->
       <div class="input-tabs">
         <button class="tab-btn" :class="{ active: inputTab === 'file' }" @click="inputTab = 'file'">
-          📁 Upload File (.pdf, .txt, .md, .json)
+          📁 Upload PDF / Resume
         </button>
         <button class="tab-btn" :class="{ active: inputTab === 'paste' }" @click="inputTab = 'paste'">
-          📝 Paste Raw Text / Markdown
+          📝 Raw Text / Markdown
+        </button>
+        <button v-if="rawResumeText" class="tab-btn tab-btn-extracted" :class="{ active: inputTab === 'extracted' }" @click="inputTab = 'extracted'">
+          📄 Extracted PDF Text ({{ pdfTelemetry.wordCount || rawResumeText.split(/\s+/).filter(Boolean).length }} words)
         </button>
       </div>
 
@@ -59,29 +42,90 @@
           @change="handleFileSelected" 
         />
         <div class="dropzone-content" @click="$refs.fileInputRef?.click()">
-          <div class="upload-icon-circle">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
+          <div class="upload-icon-circle" :class="{ 'is-extracting': isPdfExtracting }">
+            <svg v-if="!isPdfExtracting" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <path d="M12 18v-6"/>
+              <path d="m9 15 3-3 3 3"/>
             </svg>
+            <span v-else class="spin-icon">⚡</span>
           </div>
-          <h4 class="drop-title">Drop your resume file here, or <span class="text-accent">browse</span></h4>
-          <p class="drop-hint">Supports PDF, Markdown, Text, or JSON resume files</p>
-          <span v-if="uploadedFileName" class="uploaded-badge">
-            ✓ Selected: {{ uploadedFileName }}
-          </span>
+
+          <div class="drop-text-group">
+            <div class="pdf-support-banner">
+              <span class="pdf-chip">📄 Mozilla PDF.js Engine</span>
+              <span class="pdf-sub-chip">Multi-Page & Coordinates Aware</span>
+            </div>
+            <h4 class="drop-title">
+              {{ isPdfExtracting ? 'Extracting text streams from PDF...' : 'Drop your PDF resume here, or browse files' }}
+            </h4>
+            <p class="drop-hint">Full native support for 1–5 page PDF resumes, ligatures, and multi-column formats</p>
+          </div>
+
+          <div v-if="uploadedFileName" class="uploaded-telemetry-badge">
+            <span class="check-icon">✓</span>
+            <span class="filename-text">{{ uploadedFileName }}</span>
+            <span v-if="pdfTelemetry.pageCount" class="badge-page-count mono">
+              {{ pdfTelemetry.pageCount }} Page{{ pdfTelemetry.pageCount > 1 ? 's' : '' }} • {{ pdfTelemetry.wordCount }} Words
+            </span>
+          </div>
         </div>
       </div>
 
       <!-- Text Paste Area -->
-      <div v-else class="paste-area">
+      <div v-else-if="inputTab === 'paste'" class="paste-area">
         <textarea 
           v-model="rawResumeText" 
           class="raw-textarea mono"
           placeholder="Paste your resume markdown, bullet points, skills, or LinkedIn profile text here..."
           @input="parseCurrentText"
         ></textarea>
+      </div>
+
+      <!-- Extracted Raw PDF Text Inspection View -->
+      <div v-else-if="inputTab === 'extracted'" class="extracted-text-view">
+        <div class="extracted-view-hdr">
+          <span class="hdr-lbl mono">Clean text extracted by Mozilla PDF.js</span>
+          <button class="btn-copy-text" @click="inputTab = 'paste'">Edit in Raw View</button>
+        </div>
+        <textarea 
+          readonly 
+          :value="rawResumeText" 
+          class="raw-textarea mono text-extracted-readonly"
+        ></textarea>
+      </div>
+
+      <!-- Agentic AI & RAG Parsing Bar -->
+      <div class="ai-rag-control-bar">
+        <div class="ai-rag-info">
+          <div class="rag-badge-row">
+            <span class="agentic-pill">🤖 AGENTIC AI & RAG</span>
+            <span class="free-api-pill">Free Multi-Model AI</span>
+            <span v-if="telemetryModel" class="model-badge mono">{{ telemetryModel }}</span>
+            <span v-if="telemetryTime" class="time-badge mono">⚡ {{ telemetryTime }}ms</span>
+          </div>
+          <p class="rag-desc">
+            Retrieval-Augmented Generation: semantic document chunking, 250+ tech ontology vector matching & automated candidate schema grounding.
+          </p>
+        </div>
+
+        <button 
+          class="btn btn-primary btn-ai-rag-parse" 
+          :disabled="isAiParsing || !rawResumeText"
+          @click="runAgenticRagParse"
+        >
+          <span v-if="isAiParsing" class="spin-icon">⚡</span>
+          <span v-else>✨ Run Agentic RAG Parse (Free)</span>
+        </button>
+      </div>
+
+      <!-- Agentic Progress Indicator -->
+      <div v-if="isAiParsing || parseProgressMessage" class="agentic-progress-card">
+        <div class="progress-message-row">
+          <span class="step-indicator-dot" :class="{ 'pulse-active': isAiParsing }"></span>
+          <span class="progress-text mono">{{ parseProgressMessage }}</span>
+        </div>
       </div>
 
       <!-- Extracted Candidate Live Preview & Fine-Tune Editor -->
@@ -205,52 +249,61 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { resumeService, PRESET_RESUMES } from '../services/resumeService.js';
+import { resumeService, EMPTY_RESUME } from '../services/resumeService.js';
+import { aiParserService } from '../services/aiParserService.js';
+import { pdfParserService } from '../services/pdfParserService.js';
 
 const emit = defineEmits(['close', 'resume-applied']);
 
 const inputTab = ref('file');
 const rawResumeText = ref('');
 const uploadedFileName = ref('');
-const selectedPreset = ref(null);
 const fileInputRef = ref(null);
 const newSkillInput = ref('');
 
-const presets = {
-  php: { role: 'PHP / Laravel Specialist', icon: '🐘', data: PRESET_RESUMES.php },
-  vue: { role: 'Vue 3 & Frontend Architect', icon: '💎', data: PRESET_RESUMES.vue },
-  python: { role: 'Python / Data Automation', icon: '🐍', data: PRESET_RESUMES.python },
-  wordpress: { role: 'WordPress & Modern PHP', icon: '🌐', data: PRESET_RESUMES.wordpress }
-};
+// PDF Parser & Extraction State
+const isPdfExtracting = ref(false);
+const pdfTelemetry = ref({ pageCount: 0, wordCount: 0 });
 
-const parsedCandidate = ref({ ...PRESET_RESUMES.vue });
+// Agentic RAG State
+const isAiParsing = ref(false);
+const parseProgressMessage = ref('');
+const telemetryModel = ref('');
+const telemetryTime = ref(0);
 
-const loadPreset = (key) => {
-  selectedPreset.value = key;
-  const preset = presets[key]?.data;
-  if (!preset) return;
-
-  parsedCandidate.value = JSON.parse(JSON.stringify(preset));
-
-  rawResumeText.value = [
-    preset.name,
-    preset.headline,
-    `Location: ${preset.location} | Email: ${preset.email} | Phone: ${preset.phone}`,
-    `${preset.yearsOfExperience}+ years of experience in modern software engineering`,
-    '',
-    'SUMMARY',
-    preset.summary,
-    '',
-    'SKILLS',
-    (preset.skills || []).join(', ')
-  ].join('\n');
-
-  uploadedFileName.value = `${preset.name.replace(/\s+/g, '_')}_Resume.md`;
-};
+const initialResume = resumeService.getMasterResume();
+const parsedCandidate = ref(
+  initialResume && resumeService.hasUploadedResume(initialResume)
+    ? JSON.parse(JSON.stringify(initialResume))
+    : JSON.parse(JSON.stringify(EMPTY_RESUME))
+);
 
 const parseCurrentText = () => {
-  selectedPreset.value = null;
   parsedCandidate.value = resumeService.parseRawText(rawResumeText.value, uploadedFileName.value);
+};
+
+const runAgenticRagParse = async () => {
+  if (!rawResumeText.value) return;
+  isAiParsing.value = true;
+  parseProgressMessage.value = 'Initializing RAG Document Chunker...';
+
+  try {
+    const { parsedCandidate: result, telemetry } = await aiParserService.agenticRagParse(rawResumeText.value, {
+      filename: uploadedFileName.value,
+      onProgress: (p) => {
+        parseProgressMessage.value = p.message;
+      }
+    });
+
+    parsedCandidate.value = result;
+    telemetryModel.value = telemetry.modelUsed;
+    telemetryTime.value = telemetry.processingTimeMs;
+  } catch (err) {
+    console.warn('[ResumeUploadModal] Agentic RAG Parse fallback:', err);
+    parseCurrentText();
+  } finally {
+    isAiParsing.value = false;
+  }
 };
 
 const removeSkill = (index) => {
@@ -289,31 +342,33 @@ const readFileContent = (file) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       rawResumeText.value = e.target.result || '';
-      parseCurrentText();
+      runAgenticRagParse();
     };
     reader.readAsText(file);
     return;
   }
 
-  // PDF file format (extract clean ASCII text strings from stream)
-  if (file.name.endsWith('.pdf')) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const buffer = e.target.result;
-      const uint8 = new Uint8Array(buffer);
-      let text = '';
-      for (let i = 0; i < uint8.length; i++) {
-        const c = uint8[i];
-        if ((c >= 32 && c <= 126) || c === 10 || c === 13) {
-          text += String.fromCharCode(c);
-        } else if (text.length && text[text.length - 1] !== ' ') {
-          text += ' ';
-        }
+  // PDF file format (Mozilla pdfjs-dist multi-page extraction)
+  if (file.name.toLowerCase().endsWith('.pdf')) {
+    isPdfExtracting.value = true;
+    parseProgressMessage.value = 'Initializing Mozilla PDF.js engine...';
+
+    pdfParserService.extractTextFromPdf(file, {
+      onProgress: (p) => {
+        parseProgressMessage.value = p.message;
       }
+    }).then(async ({ text, pageCount, wordCount }) => {
       rawResumeText.value = text;
-      parseCurrentText();
-    };
-    reader.readAsArrayBuffer(file);
+      pdfTelemetry.value = { pageCount, wordCount };
+      inputTab.value = 'file';
+      await runAgenticRagParse();
+    }).catch(err => {
+      console.error('[ResumeUploadModal] PDF Parsing failed:', err);
+      parseProgressMessage.value = `PDF extraction error: ${err.message}. You can also paste text directly.`;
+    }).finally(() => {
+      isPdfExtracting.value = false;
+    });
+
     return;
   }
 
@@ -321,20 +376,24 @@ const readFileContent = (file) => {
   const reader = new FileReader();
   reader.onload = (e) => {
     rawResumeText.value = e.target.result || '';
-    parseCurrentText();
+    runAgenticRagParse();
   };
   reader.readAsText(file);
 };
 
 const applyParsedResume = () => {
-  resumeService.saveMasterResume(parsedCandidate.value);
-  emit('resume-applied', parsedCandidate.value);
+  const toSave = {
+    ...parsedCandidate.value,
+    rawText: rawResumeText.value || ''
+  };
+  resumeService.saveMasterResume(toSave);
+  emit('resume-applied', toSave);
   emit('close');
 };
 
 onMounted(() => {
   const current = resumeService.getMasterResume();
-  if (current) {
+  if (current && resumeService.hasUploadedResume(current)) {
     parsedCandidate.value = JSON.parse(JSON.stringify(current));
     rawResumeText.value = [
       current.name,
@@ -554,6 +613,101 @@ onMounted(() => {
   padding: 0.2rem 0.6rem;
   border-radius: var(--radius-full);
   margin-top: 0.35rem;
+}
+
+.pdf-support-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.pdf-chip {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #fda4af;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.pdf-sub-chip {
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+
+.uploaded-telemetry-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.76rem;
+  color: #ffffff;
+  margin-top: 0.35rem;
+}
+
+.check-icon {
+  color: #34d399;
+  font-weight: 800;
+}
+
+.filename-text {
+  font-weight: 700;
+}
+
+.badge-page-count {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  color: #34d399;
+  font-size: 0.7rem;
+}
+
+.upload-icon-circle.is-extracting {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+}
+
+/* Extracted text view */
+.extracted-text-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.extracted-view-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.btn-copy-text {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #38bdf8;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.text-extracted-readonly {
+  height: 140px;
+  background: rgba(0, 0, 0, 0.6);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #e2e8f0;
 }
 
 /* Paste Textarea */
@@ -813,5 +967,130 @@ onMounted(() => {
 .btn-apply-rank:hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+}
+
+/* Agentic AI & RAG Control Bar */
+.ai-rag-control-bar {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(99, 102, 241, 0.08));
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .ai-rag-control-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.ai-rag-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.rag-badge-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.agentic-pill {
+  background: rgba(99, 102, 241, 0.22);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.free-api-pill {
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.model-badge {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #38bdf8;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.time-badge {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  font-size: 0.66rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.rag-desc {
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.btn-ai-rag-parse {
+  white-space: nowrap;
+  background: linear-gradient(135deg, #6366f1, #38bdf8);
+  border: none;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 0.65rem 1.15rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.btn-ai-rag-parse:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.5);
+}
+
+.btn-ai-rag-parse:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.agentic-progress-card {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px dashed rgba(56, 189, 248, 0.35);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 1rem;
+}
+
+.progress-message-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.step-indicator-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+.progress-text {
+  font-size: 0.78rem;
+  color: #e2e8f0;
 }
 </style>

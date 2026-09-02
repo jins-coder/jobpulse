@@ -24,6 +24,7 @@
           @easy-apply="openEasyApply"
           @edit-resume="openResumeEditor"
           @resume-updated="handleResumeUpdated"
+          @refresh-jobs="refreshLiveJobs"
         />
 
         <!-- 2. ATS Resume Optimizer & Parser Hub -->
@@ -38,9 +39,19 @@
         <MarketInsights 
           v-else-if="currentView === 'insights'"
           :jobs="jobs"
+          @change-view="switchView"
         />
 
-        <!-- 4. Job Tracker Pipeline -->
+        <!-- 4. What Current Job Market Lacks & Solutions -->
+        <MarketGaps 
+          v-else-if="currentView === 'market-gaps'"
+          :jobs="jobs"
+          @change-view="switchView"
+          @open-easy-apply="openEasyApply"
+          @upload-resume="openResumeEditor"
+        />
+
+        <!-- 5. Job Tracker Pipeline -->
         <JobTracker 
           v-else-if="currentView === 'tracker'"
           :jobs="jobs"
@@ -66,6 +77,7 @@
       :job="easyApplyJob"
       @close="easyApplyJob = null"
       @applied="handleApplicationSubmitted"
+      @view-tracker="switchView('tracker')"
     />
 
     <!-- User Authentication Modal -->
@@ -93,6 +105,7 @@ import JobCard from './components/JobCard.vue';
 import JobDetailModal from './components/JobDetailModal.vue';
 import JobTracker from './components/JobTracker.vue';
 import MarketInsights from './components/MarketInsights.vue';
+import MarketGaps from './components/MarketGaps.vue';
 import EasyApplyModal from './components/EasyApplyModal.vue';
 import AuthModal from './components/AuthModal.vue';
 import AtsChecker from './components/AtsChecker.vue';
@@ -102,7 +115,7 @@ import { authService } from './services/authService.js';
 import { dbService } from './services/dbService.js';
 
 // App State
-const currentView = ref('explorer'); // 'explorer' | 'ats' | 'insights' | 'tracker'
+const currentView = ref('explorer'); // 'explorer' | 'ats' | 'insights' | 'market-gaps' | 'tracker'
 const jobs = ref([]);
 const selectedJob = ref(null);
 const easyApplyJob = ref(null);
@@ -128,9 +141,33 @@ const showToast = (msg) => {
 };
 
 onMounted(async () => {
-  jobs.value = storageService.getJobs();
+  const cached = storageService.getJobs();
+  if (cached.length > 0) {
+    jobs.value = cached;
+  }
+  try {
+    const live = await storageService.fetchLiveJobs();
+    if (live && live.length > 0) {
+      jobs.value = live;
+    }
+  } catch (err) {
+    console.warn('[App] Live jobs fetch fallback:', err);
+  }
   await authService.checkAuth();
 });
+
+const refreshLiveJobs = async () => {
+  showToast('Scraping latest live job feeds...');
+  try {
+    const fresh = await storageService.fetchLiveJobs(true);
+    if (fresh && fresh.length > 0) {
+      jobs.value = fresh;
+      showToast(`⚡ Ingested ${fresh.length} live opportunities!`);
+    }
+  } catch (e) {
+    showToast('Could not reach live scraper endpoint.');
+  }
+};
 
 const handleAuthSuccess = (user) => {
   showToast(`Welcome back, ${user.name}!`);
@@ -168,8 +205,7 @@ const openResumeEditor = () => {
 const handleApplicationSubmitted = ({ job, application }) => {
   // Sync refreshed jobs list
   jobs.value = storageService.getJobs();
-  showToast(`⚡ Easy Apply successfully submitted for ${job.title} @ ${job.company}! (${application.matchScore}% Match)`);
-  easyApplyJob.value = null;
+  showToast(`⚡ Application successfully submitted & dispatched for ${job.title} @ ${job.company}!`);
 
   // Background Cloud Indexing
   dbService.saveApplication(application).catch(e => {

@@ -72,11 +72,17 @@
 
     <!-- Tags Row -->
     <div class="card-tags">
-      <span v-for="tag in (job.tags || []).slice(0, 4)" :key="tag" class="tech-tag">
+      <span 
+        v-for="tag in (job.tags || []).slice(0, 5)" 
+        :key="tag" 
+        class="tech-tag"
+        :class="{ 'tag-matched': isSkillMatched(tag) }"
+      >
+        <span v-if="isSkillMatched(tag)" class="tag-match-icon">✓</span>
         {{ tag }}
       </span>
-      <span v-if="(job.tags || []).length > 4" class="tech-tag more-tag">
-        +{{ job.tags.length - 4 }}
+      <span v-if="(job.tags || []).length > 5" class="tech-tag more-tag">
+        +{{ job.tags.length - 5 }}
       </span>
     </div>
 
@@ -138,13 +144,29 @@ const matchScore = computed(() => {
   return comp.overallScore;
 });
 
+const isSkillMatched = (tag) => {
+  if (!props.candidateResume || !Array.isArray(props.candidateResume.skills)) return false;
+  const tagLower = tag.toLowerCase();
+  return props.candidateResume.skills.some(s => {
+    const sl = (s || '').toLowerCase();
+    return sl === tagLower || sl.includes(tagLower) || tagLower.includes(sl);
+  });
+};
+
 const getPlatformClass = (platform) => {
   const map = {
     LinkedIn: 'platform-linkedin',
     Indeed: 'platform-indeed',
     RemoteOK: 'platform-remoteok',
     WeWorkRemotely: 'platform-wwr',
-    Wellfound: 'platform-wellfound'
+    Wellfound: 'platform-wellfound',
+    'Y Combinator': 'platform-yc',
+    Naukri: 'platform-naukri',
+    Remotive: 'platform-remotive',
+    Dice: 'platform-dice',
+    'HN Hiring': 'platform-hn',
+    Instahyre: 'platform-instahyre',
+    Glassdoor: 'platform-glassdoor'
   };
   return map[platform] || 'platform-default';
 };
@@ -276,6 +298,48 @@ const timeAgo = (dateStr) => {
   background: rgba(168, 85, 247, 0.18);
   color: #c084fc;
   border: 1px solid rgba(192, 132, 252, 0.3);
+}
+
+.platform-yc {
+  background: rgba(255, 102, 0, 0.18);
+  color: #ff9933;
+  border: 1px solid rgba(255, 102, 0, 0.35);
+}
+
+.platform-naukri {
+  background: rgba(0, 112, 186, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(0, 112, 186, 0.4);
+}
+
+.platform-remotive {
+  background: rgba(16, 185, 129, 0.18);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.platform-dice {
+  background: rgba(225, 29, 72, 0.18);
+  color: #fb7185;
+  border: 1px solid rgba(225, 29, 72, 0.35);
+}
+
+.platform-hn {
+  background: rgba(249, 115, 22, 0.2);
+  color: #fdba74;
+  border: 1px solid rgba(249, 115, 22, 0.4);
+}
+
+.platform-instahyre {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.platform-glassdoor {
+  background: rgba(12, 170, 65, 0.18);
+  color: #4ade80;
+  border: 1px solid rgba(12, 170, 65, 0.35);
 }
 
 .platform-default {
@@ -421,6 +485,21 @@ const timeAgo = (dateStr) => {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.tech-tag.tag-matched {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.45);
+  color: #34d399;
+  font-weight: 700;
+}
+
+.tag-match-icon {
+  color: #34d399;
+  font-weight: 800;
+  font-size: 0.65rem;
+  margin-right: 2px;
 }
 
 .more-tag {

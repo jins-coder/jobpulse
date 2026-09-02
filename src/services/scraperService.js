@@ -41,6 +41,62 @@ const PLATFORM_SELECTORS = {
     location: ".styles_location__JobListing",
     salary: ".styles_compensation__JobListing",
     rateLimitMs: 420
+  },
+  "Y Combinator": {
+    container: ".job-listing",
+    title: ".job-name",
+    company: ".company-name",
+    location: ".job-location",
+    salary: ".job-salary",
+    rateLimitMs: 400
+  },
+  Naukri: {
+    container: ".srp-jobtuple-wrapper",
+    title: "a.title",
+    company: "a.comp-name",
+    location: ".loc-wrap",
+    salary: ".sal-wrap",
+    rateLimitMs: 450
+  },
+  Remotive: {
+    container: ".job-list-item",
+    title: ".job-title",
+    company: ".company-name",
+    location: ".location",
+    salary: ".salary",
+    rateLimitMs: 380
+  },
+  Dice: {
+    container: "dhi-search-card",
+    title: "[data-cy='card-title-link']",
+    company: "[data-cy='search-result-company-name']",
+    location: "[data-cy='search-result-location']",
+    salary: ".salary",
+    rateLimitMs: 450
+  },
+  "HN Hiring": {
+    container: ".c00",
+    title: ".title",
+    company: ".author",
+    location: ".commtext",
+    salary: ".compensation",
+    rateLimitMs: 350
+  },
+  Instahyre: {
+    container: ".opportunity-card",
+    title: ".employer-job-title",
+    company: ".employer-name",
+    location: ".employer-locations",
+    salary: ".salary-breakdown",
+    rateLimitMs: 420
+  },
+  Glassdoor: {
+    container: ".jobCard",
+    title: ".jobTitle",
+    company: ".EmployerProfile_compactEmployerName__LE242",
+    location: ".jobCardLocation",
+    salary: ".SalaryEstimate_salaryEstimate__Wp5qJ",
+    rateLimitMs: 500
   }
 };
 

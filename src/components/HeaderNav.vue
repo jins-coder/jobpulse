@@ -45,7 +45,7 @@
           <path d="m9 15 2 2 4-4"/>
         </svg>
         <span>ATS Optimizer</span>
-        <span class="tab-badge-emerald">88%</span>
+        <span class="tab-badge-emerald">FREE</span>
       </button>
 
       <button 
@@ -59,6 +59,20 @@
           <line x1="6" y1="20" x2="6" y2="14"/>
         </svg>
         <span>Market Insights</span>
+      </button>
+
+      <button 
+        class="nav-tab" 
+        :class="{ active: currentView === 'market-gaps' }"
+        @click="$emit('change-view', 'market-gaps')"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="8" x2="12" y2="12"/>
+          <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span>Market Gaps</span>
+        <span class="tab-badge-rose">7 Solved</span>
       </button>
 
       <button 
@@ -325,6 +339,17 @@ onUnmounted(() => {
   padding: 0.1rem 0.4rem;
   border-radius: 4px;
   border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.tab-badge-rose {
+  background: rgba(244, 63, 94, 0.18);
+  color: #fda4af;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid rgba(244, 63, 94, 0.3);
 }
 
 .scraping-indicator {

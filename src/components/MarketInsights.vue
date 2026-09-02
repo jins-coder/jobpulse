@@ -5,7 +5,7 @@
       <div class="header-content">
         <div class="insights-badge-row">
           <span class="pulse-badge">LIVE MARKET RADAR</span>
-          <span class="telemetry-badge mono">21 Postings Ingested</span>
+          <span class="telemetry-badge mono">{{ jobs.length }} Postings Ingested</span>
         </div>
         <h2 class="title">Engineering Market Insights & Hiring Intelligence</h2>
         <p class="subtitle">
@@ -250,14 +250,43 @@ const regionalHubs = computed(() => {
 });
 
 const salaryByLevel = computed(() => {
-  const levels = [
-    { level: 'Entry', avgUsd: 95000, avgInrL: 10 },
-    { level: 'Mid', avgUsd: 135000, avgInrL: 18 },
-    { level: 'Senior', avgUsd: 175000, avgInrL: 28 },
-    { level: 'Lead', avgUsd: 215000, avgInrL: 38 }
-  ];
+  const tiers = ['Entry', 'Mid', 'Senior', 'Lead'];
+  
+  // Calculate average baseline USD salary from available USD jobs
+  const usdJobs = props.jobs.filter(j => j.salary && (j.salary.currency === 'USD' || !j.salary.currency));
+  const overallAvgUsd = usdJobs.length > 0 
+    ? Math.round(usdJobs.reduce((sum, j) => sum + ((j.salary.min + (j.salary.max || j.salary.min)) / 2), 0) / usdJobs.length)
+    : 140000;
 
-  return levels;
+  // Multipliers for seniority fit when specific tier sample is small
+  const tierMultipliers = { Entry: 0.68, Mid: 0.95, Senior: 1.25, Lead: 1.55 };
+
+  return tiers.map(level => {
+    // Find jobs matching experience level or title
+    const matchingJobs = props.jobs.filter(j => {
+      const expMatch = (j.experienceLevel || '').toLowerCase() === level.toLowerCase();
+      const titleMatch = new RegExp(`\\b${level}\\b`, 'i').test(j.title || '');
+      return expMatch || titleMatch;
+    });
+
+    // Compute actual USD average if matching jobs with USD exist
+    const levelUsdJobs = matchingJobs.filter(j => j.salary && (j.salary.currency === 'USD' || !j.salary.currency));
+    const avgUsd = levelUsdJobs.length > 0
+      ? Math.round(levelUsdJobs.reduce((sum, j) => sum + ((j.salary.min + (j.salary.max || j.salary.min)) / 2), 0) / levelUsdJobs.length)
+      : Math.round(overallAvgUsd * tierMultipliers[level]);
+
+    // Compute INR Lakhs equivalent or actual INR jobs
+    const levelInrJobs = matchingJobs.filter(j => j.salary && j.salary.currency === 'INR');
+    const avgInrL = levelInrJobs.length > 0
+      ? Math.round(levelInrJobs.reduce((sum, j) => sum + ((j.salary.min + (j.salary.max || j.salary.min)) / 2), 0) / levelInrJobs.length / 100000)
+      : Math.round((avgUsd / 100000) * 16);
+
+    return {
+      level,
+      avgUsd,
+      avgInrL
+    };
+  });
 });
 
 const topCompanies = computed(() => {

@@ -1,35 +1,114 @@
 // Storage & Export service for JobPulse
 import { DEFAULT_JOBS } from '../data/defaultJobs.js';
 
-const STORAGE_KEY_JOBS = 'jobpulse_scraped_jobs_v2';
+const STORAGE_KEY_JOBS = 'jobpulse_live_scraped_jobs_v1';
 const STORAGE_KEY_RUNS = 'jobpulse_scraper_history_v1';
 const STORAGE_KEY_APPLICATIONS = 'jobpulse_applications_v1';
 
 export const storageService = {
   // --- Jobs Storage Methods ---
   getJobs() {
+    const raw = localStorage.getItem(STORAGE_KEY_JOBS);
+    if (!raw) return [];
     try {
-      const data = localStorage.getItem(STORAGE_KEY_JOBS);
-      if (!data) {
-        this.saveJobs(DEFAULT_JOBS);
-        return [...DEFAULT_JOBS];
-      }
-      const parsed = JSON.parse(data);
+      const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        const existingIds = new Set(parsed.map(j => j.id));
-        const missingSeeds = DEFAULT_JOBS.filter(d => !existingIds.has(d.id));
-        if (missingSeeds.length > 0) {
-          const merged = [...parsed, ...missingSeeds];
-          this.saveJobs(merged);
-          return merged;
-        }
-        return parsed;
+        // Purge legacy mock ids and non-software scraped items
+        const cleaned = parsed.filter(j => 
+          !j.id?.startsWith('job-') &&
+          !/\b(writer|writing|advisory board|golf|nurse|doctor|driver|truck|carpenter|realtor|paralegal|waiter|cashier|warehouse|customer support|recruiter)\b/i.test(j.title || '')
+        );
+        return cleaned;
       }
-      return [...DEFAULT_JOBS];
+      return [];
     } catch (e) {
       console.error("Failed to load jobs from localStorage", e);
-      return [...DEFAULT_JOBS];
+      return [];
     }
+  },
+
+  /**
+   * Fetch real live opportunities from live backend / public APIs
+   * @param {boolean} forceRefresh 
+   * @returns {Promise<Array>}
+   */
+  async fetchLiveJobs(forceRefresh = false) {
+    // Check if we already have valid live jobs cached in localStorage
+    const cached = this.getJobs();
+    if (!forceRefresh && cached.length > 0) {
+      return cached;
+    }
+
+    let liveJobs = [];
+
+    // 1. Try Express Backend /api/jobs/live endpoint (aggregates Remotive + Arbeitnow)
+    try {
+      const res = await fetch(`/api/jobs/live?force=${forceRefresh}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (Array.isArray(json.jobs) && json.jobs.length > 0) {
+          liveJobs = json.jobs;
+        }
+      }
+    } catch (apiErr) {
+      console.warn('[storageService] Backend API not reachable, falling back to direct public feeds:', apiErr);
+    }
+
+    // 2. Direct client-side fetch fallback from free Remotive API if backend was unreachable
+    if (liveJobs.length === 0) {
+      try {
+        const remotiveRes = await fetch('https://remotive.com/api/remote-jobs?category=software-dev&limit=30');
+        if (remotiveRes.ok) {
+          const remotiveData = await remotiveRes.json();
+          const items = Array.isArray(remotiveData.jobs) ? remotiveData.jobs : [];
+          liveJobs = items.map(item => ({
+            id: `client-live-${item.id}`,
+            title: item.title,
+            company: item.company_name,
+            companyLogo: (item.company_name || 'CO').slice(0, 2).toUpperCase(),
+            logoBg: 'linear-gradient(135deg, #10b981, #047857)',
+            location: item.candidate_required_location || 'Remote (Worldwide)',
+            isRemote: true,
+            platform: 'Remotive',
+            platformUrl: item.url,
+            salary: { min: 120000, max: 170000, currency: 'USD', formatted: '$120k - $170k/yr' },
+            type: 'Full-time',
+            experienceLevel: (item.title || '').toLowerCase().includes('senior') ? 'Senior' : 'Mid',
+            tags: item.tags?.length ? item.tags.slice(0, 5) : ['Remote', 'Developer', 'Web'],
+            scrapedAt: item.publication_date || new Date().toISOString(),
+            description: (item.description || '').replace(/<[^>]*>?/gm, ' ').slice(0, 400) + '...',
+            responsibilities: ['Develop maintainable web applications and services.', 'Collaborate asynchronously across time zones.'],
+            requirements: ['Proven background in software engineering.', 'Strong problem-solving abilities.'],
+            benefits: ['100% remote', 'Flexible working hours'],
+            status: null
+          }));
+        }
+      } catch (directErr) {
+        console.warn('[storageService] Client-side Remotive fetch fallback failed:', directErr);
+      }
+    }
+
+    if (liveJobs.length > 0) {
+      // Preserve user application statuses (saved, applied, etc.) from existing jobs
+      const statusMap = new Map();
+      for (const oldJob of cached) {
+        if (oldJob.status) {
+          statusMap.set(oldJob.title.toLowerCase() + '-' + oldJob.company.toLowerCase(), oldJob.status);
+        }
+      }
+
+      for (const j of liveJobs) {
+        const key = j.title.toLowerCase() + '-' + j.company.toLowerCase();
+        if (statusMap.has(key)) {
+          j.status = statusMap.get(key);
+        }
+      }
+
+      this.saveJobs(liveJobs);
+      return liveJobs;
+    }
+
+    return cached;
   },
 
   saveJobs(jobs) {

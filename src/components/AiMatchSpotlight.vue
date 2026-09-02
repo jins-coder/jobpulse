@@ -3,58 +3,86 @@
     <!-- Top Bento Section: Active Resume Radar & Market Readiness -->
     <div class="bento-row">
       <!-- Candidate Resume Card -->
-      <div class="resume-radar-card">
-        <div class="radar-top">
-          <div class="candidate-avatar">
-            <span>{{ (resume.name || 'AM').slice(0, 2).toUpperCase() }}</span>
-            <span class="active-dot" title="Resume active for real-time scoring"></span>
-          </div>
-          <div class="candidate-info">
-            <div class="badge-row">
-              <span class="pill-active-resume">ACTIVE RESUME PARSER</span>
-              <span class="exp-badge">{{ resume.yearsOfExperience }}+ Years Exp</span>
+      <div class="resume-radar-card" :class="{ 'empty-radar': !hasUploadedResume }">
+        <template v-if="hasUploadedResume">
+          <div class="radar-top">
+            <div class="candidate-avatar">
+              <span>{{ (resume.name || 'CP').slice(0, 2).toUpperCase() }}</span>
+              <span class="active-dot" title="Resume active for real-time scoring"></span>
             </div>
-            <h3 class="candidate-name">{{ resume.name }}</h3>
-            <p class="candidate-headline">{{ resume.headline }}</p>
+            <div class="candidate-info">
+              <div class="badge-row">
+                <span class="pill-active-resume">ACTIVE CANDIDATE PROFILE</span>
+                <span class="exp-badge">{{ resume.yearsOfExperience }}+ Years Exp</span>
+              </div>
+              <h3 class="candidate-name">{{ resume.name }}</h3>
+              <p class="candidate-headline">{{ resume.headline }}</p>
+            </div>
           </div>
-        </div>
 
-        <div class="skills-mini-cloud">
-          <span v-for="skill in (resume.skills || []).slice(0, 6)" :key="skill" class="mini-skill-chip">
-            {{ skill }}
-          </span>
-          <span v-if="(resume.skills || []).length > 6" class="more-skills-pill">
-            +{{ resume.skills.length - 6 }} more
-          </span>
-        </div>
+          <div class="skills-mini-cloud">
+            <span v-for="skill in (resume.skills || []).slice(0, 6)" :key="skill" class="mini-skill-chip">
+              {{ skill }}
+            </span>
+            <span v-if="(resume.skills || []).length > 6" class="more-skills-pill">
+              +{{ resume.skills.length - 6 }} more
+            </span>
+          </div>
 
-        <div class="radar-footer">
-          <div class="readiness-meter">
-            <div class="meter-lbl-row">
-              <span class="meter-title">Market Confidence Index</span>
-              <strong class="meter-percent mono">{{ marketConfidenceIndex }}%</strong>
+          <div class="radar-footer">
+            <div class="readiness-meter">
+              <div class="meter-lbl-row">
+                <span class="meter-title">Market Confidence Index</span>
+                <strong class="meter-percent mono">{{ marketConfidenceIndex }}%</strong>
+              </div>
+              <div class="meter-bar-track">
+                <div class="meter-bar-glow" :style="{ width: marketConfidenceIndex + '%' }"></div>
+              </div>
             </div>
-            <div class="meter-bar-track">
-              <div class="meter-bar-glow" :style="{ width: marketConfidenceIndex + '%' }"></div>
+            <div class="radar-action-btns">
+              <button class="btn btn-primary btn-sm btn-upload-spotlight" @click="$emit('upload-resume')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span>Upload New</span>
+              </button>
+              <button class="btn btn-outline-sm btn-edit-profile" @click="$emit('edit-resume')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                </svg>
+                <span>Edit</span>
+              </button>
             </div>
           </div>
-          <div class="radar-action-btns">
-            <button class="btn btn-primary btn-sm btn-upload-spotlight" @click="$emit('upload-resume')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        </template>
+
+        <template v-else>
+          <div class="radar-top">
+            <div class="candidate-avatar placeholder-avatar">
+              <span>📄</span>
+            </div>
+            <div class="candidate-info">
+              <div class="badge-row">
+                <span class="pill-pending-resume">NO RESUME UPLOADED</span>
+              </div>
+              <h3 class="candidate-name">Connect Your Resume</h3>
+              <p class="candidate-headline">Upload your resume to calculate your match confidence and rank jobs tailored to your skills.</p>
+            </div>
+          </div>
+
+          <div class="radar-footer empty-footer">
+            <button class="btn btn-primary btn-upload-spotlight w-full" @click="$emit('upload-resume')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                 <polyline points="17 8 12 3 7 8"/>
                 <line x1="12" y1="3" x2="12" y2="15"/>
               </svg>
-              <span>Upload Resume</span>
-            </button>
-            <button class="btn btn-outline-sm btn-edit-profile" @click="$emit('edit-resume')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-              </svg>
-              <span>Edit</span>
+              <span>Upload & Parse Resume ⚡</span>
             </button>
           </div>
-        </div>
+        </template>
       </div>
 
       <!-- Quick AI Suggestion Bar & Smart Prompts -->
@@ -125,7 +153,7 @@
       </div>
 
       <!-- Confident Matches Grid -->
-      <div class="confident-cards-grid">
+      <div v-if="topConfidentJobs.length > 0" class="confident-cards-grid">
         <div 
           v-for="(job, index) in topConfidentJobs" 
           :key="job.id"
@@ -171,7 +199,7 @@
                 v-for="tag in (job.tags || []).slice(0, 4)" 
                 :key="tag" 
                 class="conf-tag"
-                :class="{ 'matched-tag': (resume.skills || []).map(s => s.toLowerCase()).includes(tag.toLowerCase()) }"
+                :class="{ 'matched-tag': (resume?.skills || []).map(s => s.toLowerCase()).includes(tag.toLowerCase()) }"
               >
                 {{ tag }}
               </span>
@@ -202,6 +230,25 @@
           </div>
         </div>
       </div>
+
+      <!-- Empty Confident Matches State (Pending Resume Upload) -->
+      <div v-else class="empty-confident-box glass-panel">
+        <div class="empty-conf-icon">⚡</div>
+        <div class="empty-conf-text">
+          <h4 class="empty-conf-title">Upload Your Resume to Unlock Top Matches</h4>
+          <p class="empty-conf-desc">
+            Connect your resume (.pdf, .txt, .json) to calculate real-time compatibility and surface your #1, #2, and #3 highest confident engineering roles.
+          </p>
+        </div>
+        <button class="btn btn-primary btn-sm btn-upload-spotlight" @click="$emit('upload-resume')">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span>Upload Resume & Rank</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -223,9 +270,14 @@ const props = defineProps({
 
 const emit = defineEmits(['select-job', 'easy-apply', 'edit-resume', 'upload-resume', 'filter-suggestion']);
 
+const hasUploadedResume = computed(() => {
+  return resumeService.hasUploadedResume(props.resume);
+});
+
 const marketConfidenceIndex = computed(() => {
+  if (!hasUploadedResume.value) return 0;
   const skillCount = props.resume?.skills?.length || 0;
-  return Math.min(98, Math.max(72, 70 + skillCount * 2));
+  return Math.min(98, Math.max(55, 60 + skillCount * 3));
 });
 
 // AI Suggestion State
@@ -795,5 +847,68 @@ const clearSuggestion = () => {
   color: #34d399;
   border: 1px solid rgba(16, 185, 129, 0.4);
   box-shadow: none;
+}
+
+/* Empty State Styling (Pending Upload) */
+.empty-radar {
+  border-style: dashed;
+  border-color: rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.02);
+}
+
+.placeholder-avatar {
+  background: rgba(56, 189, 248, 0.12) !important;
+  border: 1px dashed rgba(56, 189, 248, 0.4);
+  font-size: 1.4rem;
+}
+
+.pill-pending-resume {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+}
+
+.empty-footer {
+  width: 100%;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.empty-confident-box {
+  padding: 3rem 2rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.empty-conf-icon {
+  font-size: 2.2rem;
+  color: #38bdf8;
+}
+
+.empty-conf-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 0.35rem;
+}
+
+.empty-conf-desc {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  max-width: 520px;
+  line-height: 1.5;
 }
 </style>

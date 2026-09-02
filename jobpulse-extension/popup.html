@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JobPulse :: ATS Application Copilot</title>
+  <style>
+    :root {
+      --bg-main: #0a0f1d;
+      --bg-card: rgba(255, 255, 255, 0.04);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --accent: #38bdf8;
+      --success: #10b981;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 360px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      overflow-x: hidden;
+    }
+
+    #app {
+      padding: 16px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #fff;
+    }
+
+    .brand-name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-tag {
+      font-size: 9.5px;
+      color: var(--accent);
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 600;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 14px;
+      gap: 4px;
+    }
+
+    .nav-tab {
+      flex: 1;
+      padding: 6px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 11.5px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .nav-tab.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+    }
+
+    /* Profile Card */
+    .profile-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .profile-name {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+
+    .profile-headline {
+      font-size: 11.5px;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .profile-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Big Action Button */
+    .btn-autofill {
+      width: 100%;
+      background: linear-gradient(135deg, #4f46e5, #3b82f6);
+      border: none;
+      color: #ffffff;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+      transition: all 0.2s;
+      margin-bottom: 14px;
+    }
+
+    .btn-autofill:hover {
+      background: linear-gradient(135deg, #4338ca, #2563eb);
+      transform: translateY(-1px);
+    }
+
+    .btn-autofill.success {
+      background: #10b981 !important;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4) !important;
+    }
+
+    /* Inputs & Form */
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    .form-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .form-input {
+      width: 100%;
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      color: #f8fafc;
+      font-size: 12px;
+      padding: 7px 10px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .form-input:focus {
+      border-color: #6366f1;
+    }
+
+    .form-textarea {
+      width: 100%;
+      height: 90px;
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      color: #f8fafc;
+      font-size: 11.5px;
+      padding: 8px 10px;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-textarea:focus {
+      border-color: #6366f1;
+    }
+
+    .pitch-presets {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .preset-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .preset-chip:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: #6366f1;
+      color: #ffffff;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border-color);
+      padding-top: 10px;
+      margin-top: 12px;
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <span class="brand-name">JobPulse</span>
+        <span class="brand-tag">Vue 3</span>
+      </div>
+      <div class="status-badge">
+        <span>●</span> Ready
+      </div>
+    </header>
+
+    <!-- Vue Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button 
+        class="nav-tab" 
+        :class="{ active: currentTab === 'autofill' }" 
+        @click="currentTab = 'autofill'"
+      >
+        ⚡ Autofill
+      </button>
+      <button 
+        class="nav-tab" 
+        :class="{ active: currentTab === 'profile' }" 
+        @click="currentTab = 'profile'"
+      >
+        👤 Profile
+      </button>
+      <button 
+        class="nav-tab" 
+        :class="{ active: currentTab === 'pitch' }" 
+        @click="currentTab = 'pitch'"
+      >
+        ✍️ Cover Pitch
+      </button>
+    </nav>
+
+    <!-- Tab 1: Autofill View -->
+    <section v-if="currentTab === 'autofill'">
+      <div class="profile-card">
+        <div class="profile-name">{{ candidate.name }}</div>
+        <div class="profile-headline">{{ candidate.headline }}</div>
+        <div class="profile-meta">{{ candidate.email }} • {{ candidate.location }}</div>
+      </div>
+
+      <button 
+        class="btn-autofill" 
+        :class="{ success: isSuccess }" 
+        @click="handleAutofill"
+      >
+        <span>{{ buttonText }}</span>
+      </button>
+
+      <div class="form-group">
+        <label class="form-label">Active Cover Letter Pitch</label>
+        <textarea 
+          class="form-textarea" 
+          v-model="candidate.coverPitch" 
+          placeholder="Enter tailored cover note..."
+        ></textarea>
+      </div>
+    </section>
+
+    <!-- Tab 2: Profile Coordinates View (Two-way reactive v-model) -->
+    <section v-if="currentTab === 'profile'">
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" v-model="candidate.name" @change="saveProfile" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Professional Headline</label>
+        <input class="form-input" v-model="candidate.headline" @change="saveProfile" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" v-model="candidate.email" @change="saveProfile" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input class="form-input" v-model="candidate.phone" @change="saveProfile" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">LinkedIn Profile URL</label>
+        <input class="form-input" v-model="candidate.linkedin" @change="saveProfile" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">GitHub / Portfolio URL</label>
+        <input class="form-input" v-model="candidate.github" @change="saveProfile" />
+      </div>
+    </section>
+
+    <!-- Tab 3: Cover Pitch Presets -->
+    <section v-if="currentTab === 'pitch'">
+      <div class="pitch-presets">
+        <button class="preset-chip" @click="applyPreset('fullstack')">Full Stack</button>
+        <button class="preset-chip" @click="applyPreset('frontend')">Frontend / Vue 3</button>
+        <button class="preset-chip" @click="applyPreset('backend')">Backend / Node</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Cover Letter Template</label>
+        <textarea 
+          class="form-textarea" 
+          style="height: 160px;" 
+          v-model="candidate.coverPitch" 
+          @change="saveProfile"
+        ></textarea>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Powered by Vue 3 • Compatible with Greenhouse, Lever, Workday, Ashby, and LinkedIn.
+    </footer>
+  </div>
+
+  <!-- Local Vue 3 Runtime (Offline & Manifest V3 Compliant) -->
+  <script src="vue.global.prod.js"></script>
+  <!-- Extension Vue 3 App -->
+  <script src="popup.js"></script>
+</body>
+</html>

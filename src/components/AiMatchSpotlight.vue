@@ -219,9 +219,11 @@ const activeSuggestion = ref('');
 
 const suggestionPills = [
   { id: 'p1', label: 'Top Vue 3 Roles ($140k+)', prompt: 'vue 3 high salary', icon: '💎' },
-  { id: 'p2', label: '100% Remote Senior', prompt: 'remote senior engineer', icon: '🌐' },
-  { id: 'p3', label: 'Full-Stack & Cloud', prompt: 'docker node typescript', icon: '⚡' },
-  { id: 'p4', label: 'High-Growth Startups', prompt: 'startup wellfound', icon: '🚀' }
+  { id: 'p2', label: 'PHP & Laravel Jobs', prompt: 'php laravel', icon: '🐘' },
+  { id: 'p3', label: 'Jobs in India', prompt: 'india bengaluru hyderabad pune', icon: '🇮🇳' },
+  { id: 'p4', label: '100% Remote Senior', prompt: 'remote senior engineer', icon: '🌐' },
+  { id: 'p5', label: 'Full-Stack & Cloud', prompt: 'docker node typescript', icon: '⚡' },
+  { id: 'p6', label: 'High-Growth Startups', prompt: 'startup wellfound', icon: '🚀' }
 ];
 
 // Top Confident Jobs calculation

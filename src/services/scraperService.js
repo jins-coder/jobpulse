@@ -46,24 +46,27 @@ const PLATFORM_SELECTORS = {
 
 const TECH_TAG_POOLS = [
   "Vue 3", "Vite", "Pinia", "TypeScript", "JavaScript", "TailwindCSS",
+  "PHP", "Laravel", "Symfony", "WordPress", "MySQL", "Redis",
   "Node.js", "Python", "Docker", "Kubernetes", "AWS", "GraphQL",
   "PostgreSQL", "Nuxt.js", "Playwright", "Puppeteer", "REST APIs",
-  "WebSockets", "Go", "Next.js", "React", "Rust", "FastAPI"
+  "WebSockets", "Go", "Next.js", "React", "Rust", "FastAPI", "Java"
 ];
 
 const SAMPLE_COMPANIES = [
+  { name: "Razorpay", logo: "RZ", bg: "linear-gradient(135deg, #0c2340, #0070ba)" },
+  { name: "Zoho", logo: "ZH", bg: "linear-gradient(135deg, #e11d48, #be123c)" },
+  { name: "Swiggy", logo: "SW", bg: "linear-gradient(135deg, #fc8019, #e65100)" },
+  { name: "Flipkart", logo: "FK", bg: "linear-gradient(135deg, #2874f0, #1752b5)" },
+  { name: "Freshworks", logo: "FW", bg: "linear-gradient(135deg, #f97316, #ea580c)" },
+  { name: "Zerodha", logo: "ZD", bg: "linear-gradient(135deg, #387ed1, #1e40af)" },
+  { name: "Postman India", logo: "PM", bg: "linear-gradient(135deg, #ef4444, #dc2626)" },
   { name: "GitLab", logo: "GL", bg: "linear-gradient(135deg, #f97316, #ea580c)" },
   { name: "Supabase", logo: "SB", bg: "linear-gradient(135deg, #10b981, #059669)" },
   { name: "Vercel", logo: "VC", bg: "linear-gradient(135deg, #111827, #374151)" },
-  { name: "Linear", logo: "LN", bg: "linear-gradient(135deg, #5b21b6, #7c3aed)" },
-  { name: "Datadog", logo: "DD", bg: "linear-gradient(135deg, #6d28d9, #4c1d95)" },
-  { name: "Cloudflare", logo: "CF", bg: "linear-gradient(135deg, #f59e0b, #d97706)" },
-  { name: "Postman", logo: "PM", bg: "linear-gradient(135deg, #ef4444, #dc2626)" },
   { name: "Automattic", logo: "AT", bg: "linear-gradient(135deg, #0284c7, #0369a1)" },
   { name: "Stripe", logo: "ST", bg: "linear-gradient(135deg, #6366f1, #4f46e5)" },
   { name: "Shopify", logo: "SH", bg: "linear-gradient(135deg, #10b981, #047857)" },
-  { name: "CrawlBase", logo: "CB", bg: "linear-gradient(135deg, #06b6d4, #0891b2)" },
-  { name: "BrightData", logo: "BD", bg: "linear-gradient(135deg, #ec4899, #db2777)" }
+  { name: "CrawlBase", logo: "CB", bg: "linear-gradient(135deg, #06b6d4, #0891b2)" }
 ];
 
 export class ScraperRunner {
@@ -322,21 +325,42 @@ export class ScraperRunner {
     const chosenLevel = levels[Math.floor(Math.random() * levels.length)];
     
     // Ensure title reflects query
-    const cleanQuery = query.trim() || "Vue.js Engineer";
-    const formattedTitle = `${chosenLevel} ${cleanQuery.charAt(0).toUpperCase() + cleanQuery.slice(1)} Engineer`;
+    // Check if query or location is for India
+    const isIndia = (location || '').toLowerCase().includes('india') || 
+                    ['bengaluru', 'bangalore', 'chennai', 'hyderabad', 'pune', 'mumbai', 'delhi', 'noida', 'gurgaon', 'kochi'].some(c => (location || '').toLowerCase().includes(c));
 
-    // Salary ranges based on level
-    let minSal = 90000;
-    let maxSal = 130000;
-    if (chosenLevel === "Mid") { minSal = 125000; maxSal = 160000; }
-    else if (chosenLevel === "Senior") { minSal = 160000; maxSal = 205000; }
-    else if (chosenLevel === "Lead" || chosenLevel === "Staff") { minSal = 195000; maxSal = 245000; }
+    let minSal, maxSal, currency, formattedSal;
+    if (isIndia) {
+      currency = "INR";
+      if (chosenLevel === "Junior") { minSal = 800000; maxSal = 1400000; formattedSal = "₹8L - ₹14L/yr"; }
+      else if (chosenLevel === "Mid") { minSal = 1500000; maxSal = 2500000; formattedSal = "₹15L - ₹25L/yr"; }
+      else if (chosenLevel === "Senior") { minSal = 2600000; maxSal = 4200000; formattedSal = "₹26L - ₹42L/yr"; }
+      else { minSal = 4000000; maxSal = 6500000; formattedSal = "₹40L - ₹65L/yr"; }
+    } else {
+      currency = "USD";
+      minSal = 90000;
+      maxSal = 130000;
+      if (chosenLevel === "Mid") { minSal = 125000; maxSal = 160000; }
+      else if (chosenLevel === "Senior") { minSal = 160000; maxSal = 205000; }
+      else if (chosenLevel === "Lead" || chosenLevel === "Staff") { minSal = 195000; maxSal = 245000; }
+      formattedSal = `$${Math.round(minSal / 1000)}k - $${Math.round(maxSal / 1000)}k/yr`;
+    }
 
-    const isRemote = location.toLowerCase().includes("remote") || Math.random() > 0.35;
-    const finalLocation = isRemote ? "Remote (US / Worldwide)" : `${location || "San Francisco, CA"} (Hybrid)`;
+    const isRemote = (location || '').toLowerCase().includes("remote") || Math.random() > 0.35;
+    let finalLocation;
+    if (isIndia) {
+      finalLocation = isRemote ? "Remote (India)" : (location || "Bengaluru, Karnataka, India");
+    } else {
+      finalLocation = isRemote ? "Remote (Worldwide)" : `${location || "San Francisco, CA"} (Hybrid)`;
+    }
 
     // Randomize tags
-    const pickedTags = new Set([cleanQuery.split(" ")[0]]);
+    const primaryTag = cleanQuery.includes("php") ? "PHP" : cleanQuery.split(" ")[0];
+    const pickedTags = new Set([primaryTag]);
+    if (cleanQuery.toLowerCase().includes("php")) {
+      pickedTags.add("Laravel");
+      pickedTags.add("MySQL");
+    }
     while (pickedTags.size < 4) {
       const randomTag = TECH_TAG_POOLS[Math.floor(Math.random() * TECH_TAG_POOLS.length)];
       pickedTags.add(randomTag);
@@ -355,8 +379,8 @@ export class ScraperRunner {
       salary: {
         min: minSal,
         max: maxSal,
-        currency: "USD",
-        formatted: `$${Math.round(minSal / 1000)}k - $${Math.round(maxSal / 1000)}k/yr`
+        currency,
+        formatted: formattedSal
       },
       type: "Full-time",
       experienceLevel: chosenLevel === "Staff" ? "Lead" : chosenLevel,

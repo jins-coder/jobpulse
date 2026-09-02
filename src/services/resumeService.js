@@ -12,9 +12,9 @@ export const DEFAULT_RESUME = {
   summary: "Results-driven Software Engineer with 6+ years of experience building high-performance web applications, reactive dashboards, and scalable SPAs with Vue 3, TypeScript, Vite, and modern cloud architectures. Passionate about developer tooling, real-time data streaming, and web scraping systems.",
   yearsOfExperience: 6,
   skills: [
-    "Vue 3", "Vite", "TypeScript", "JavaScript", "Pinia", "Vuex", 
-    "TailwindCSS", "Node.js", "REST APIs", "GraphQL", "WebSockets", 
-    "PostgreSQL", "Docker", "Jest", "Vitest", "Playwright", "Git", "CI/CD"
+    "Vue 3", "Vite", "TypeScript", "JavaScript", "PHP", "Laravel", "MySQL", 
+    "Pinia", "Vuex", "TailwindCSS", "Node.js", "REST APIs", "GraphQL", 
+    "WebSockets", "PostgreSQL", "Docker", "Jest", "Vitest", "Playwright", "Git", "CI/CD"
   ],
   experience: [
     {
@@ -104,6 +104,7 @@ export const resumeService = {
     // Extract recognized tech skills
     const candidateTech = [
       "Vue 3", "Vue.js", "Vue", "Vite", "TypeScript", "JavaScript", "React", "Next.js", "Nuxt.js",
+      "PHP", "Laravel", "Symfony", "WordPress", "Magento", "MySQL",
       "Pinia", "Vuex", "Redux", "Node.js", "Express", "Python", "FastAPI", "Go", "Rust",
       "Docker", "Kubernetes", "AWS", "GCP", "PostgreSQL", "MongoDB", "Redis", "GraphQL", "REST APIs",
       "TailwindCSS", "CSS3", "HTML5", "Playwright", "Jest", "Vitest", "WebSockets", "CI/CD"
@@ -156,7 +157,7 @@ export const resumeService = {
 
     // Title / Domain relevancy score (0 - 20% weight)
     let titleMatchCount = 0;
-    const coreDomainKeywords = ["frontend", "vue", "fullstack", "full-stack", "software", "engineer", "developer", "web"];
+    const coreDomainKeywords = ["frontend", "backend", "vue", "php", "laravel", "fullstack", "full-stack", "software", "engineer", "developer", "web"];
     for (const kw of coreDomainKeywords) {
       if (titleWords.includes(kw) && (resume.headline || '').toLowerCase().includes(kw)) {
         titleMatchCount++;

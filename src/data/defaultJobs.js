@@ -273,5 +273,308 @@ export const DEFAULT_JOBS = [
       "Hardware allowance renewed every 2 years"
     ],
     status: null
+  },
+  {
+    id: "job-009",
+    title: "Senior PHP / Laravel Backend Engineer",
+    company: "Razorpay",
+    companyLogo: "RZ",
+    logoBg: "linear-gradient(135deg, #0c2340, #0070ba)",
+    location: "Bengaluru, Karnataka, India",
+    isRemote: false,
+    platform: "LinkedIn",
+    platformUrl: "https://www.linkedin.com/jobs/view/razorpay-senior-php",
+    salary: { min: 2400000, max: 3600000, currency: "INR", formatted: "₹24L - ₹36L/yr" },
+    type: "Full-time",
+    experienceLevel: "Senior",
+    tags: ["PHP", "Laravel", "MySQL", "Redis", "REST APIs", "AWS"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    description: `Razorpay is India's leading fintech unicorn processing billions in online payments. We are looking for a Senior PHP / Laravel Engineer to scale high-throughput core transaction routing engines and financial ledger microservices.`,
+    responsibilities: [
+      "Architect and maintain high-volume transaction processing microservices using PHP 8.2+ and Laravel.",
+      "Design zero-latency MySQL schemas, partitioning strategies, and Redis caching layers.",
+      "Integrate banking partner APIs with idempotency guarantees, webhooks, and circuit breakers.",
+      "Collaborate with security and compliance teams to ensure PCI-DSS standards."
+    ],
+    requirements: [
+      "5+ years of robust backend development experience in PHP and Laravel.",
+      "Solid understanding of relational database indexing, ACID compliance, and concurrency locking.",
+      "Familiarity with distributed caching, queue workers (Horizon/RabbitMQ), and containerized deployments."
+    ],
+    benefits: [
+      "Competitive salary with high-growth ESOP grants",
+      "Comprehensive family health insurance with parent coverage",
+      "Annual learning & professional certification reimbursement",
+      "Flexible hybrid model with cab allowance in Bengaluru"
+    ],
+    status: null
+  },
+  {
+    id: "job-010",
+    title: "Full-Stack Engineer (PHP & Vue.js)",
+    company: "Zoho Corporation",
+    companyLogo: "ZH",
+    logoBg: "linear-gradient(135deg, #e11d48, #be123c)",
+    location: "Chennai, Tamil Nadu, India",
+    isRemote: false,
+    platform: "Indeed",
+    platformUrl: "https://www.indeed.com/viewjob?jk=zoho-fullstack-php-vue",
+    salary: { min: 1600000, max: 2600000, currency: "INR", formatted: "₹16L - ₹26L/yr" },
+    type: "Full-time",
+    experienceLevel: "Mid",
+    tags: ["PHP", "Vue.js", "Laravel", "PostgreSQL", "JavaScript", "REST APIs"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    description: `Join Zoho's SaaS product engineering team building cloud business applications used by over 100 million users worldwide. You will craft responsive SPAs with Vue and build reliable backend endpoints in modern PHP.`,
+    responsibilities: [
+      "Develop responsive user interfaces using Vue 3 and modern frontend build tools.",
+      "Build secure RESTful APIs and business logic modules using modern object-oriented PHP.",
+      "Optimize SQL queries on multi-terabyte PostgreSQL clusters.",
+      "Participate in product architecture discussions from design to production release."
+    ],
+    requirements: [
+      "3+ years of experience with PHP and modern frontend frameworks (Vue or React).",
+      "Strong proficiency in JavaScript (ES6+), CSS3, and DOM manipulation.",
+      "Hands-on experience with relational databases and API design."
+    ],
+    benefits: [
+      "On-campus gourmet cafeteria with free breakfast, lunch & dinner",
+      "Transport facilities across Chennai hubs",
+      "Annual performance bonuses and career progression frameworks"
+    ],
+    status: null
+  },
+  {
+    id: "job-011",
+    title: "Lead PHP / Symfony Microservices Architect",
+    company: "Swiggy",
+    companyLogo: "SW",
+    logoBg: "linear-gradient(135deg, #fc8019, #e65100)",
+    location: "Bengaluru / Remote (India)",
+    isRemote: true,
+    platform: "LinkedIn",
+    platformUrl: "https://www.linkedin.com/jobs/view/swiggy-php-architect",
+    salary: { min: 3800000, max: 5500000, currency: "INR", formatted: "₹38L - ₹55L/yr" },
+    type: "Full-time",
+    experienceLevel: "Lead",
+    tags: ["PHP", "Symfony", "Kafka", "Docker", "Kubernetes", "Redis", "Microservices"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 55).toISOString(),
+    description: `Swiggy is seeking an experienced Backend Architect to lead order dispatch and hyper-local logistics microservices built on high-performance PHP and Symfony frameworks.`,
+    responsibilities: [
+      "Lead architectural decisions for distributed backend services serving 100k+ concurrent delivery partners.",
+      "Optimize Symfony and Swoole-based asynchronous PHP runtimes for sub-20ms response latencies.",
+      "Drive observability standards across distributed tracing, Prometheus, and Grafana.",
+      "Mentor 12+ backend developers across multiple cross-functional pods."
+    ],
+    requirements: [
+      "7+ years of engineering experience with at least 4 years in high-scale PHP (Symfony or Laravel).",
+      "Deep expertise in event-driven architectures with Apache Kafka or RabbitMQ.",
+      "Demonstrated experience designing high-availability systems on AWS or GCP."
+    ],
+    benefits: [
+      "Top-tier compensation with lucrative quarterly stock vesting",
+      "100% remote flexibility with ergonomic setup allowance",
+      "Generous food & grocery credits on Swiggy platform",
+      "Comprehensive medical insurance including mental health support"
+    ],
+    status: null
+  },
+  {
+    id: "job-012",
+    title: "WordPress & Modern PHP Platform Engineer",
+    company: "Automattic",
+    companyLogo: "AT",
+    logoBg: "linear-gradient(135deg, #0284c7, #0369a1)",
+    location: "Remote (India & Global)",
+    isRemote: true,
+    platform: "RemoteOK",
+    platformUrl: "https://remoteok.com/remote-jobs/automattic-wordpress-php",
+    salary: { min: 2800000, max: 4200000, currency: "INR", formatted: "₹28L - ₹42L/yr" },
+    type: "Full-time",
+    experienceLevel: "Mid-Senior",
+    tags: ["PHP", "WordPress", "Gutenberg", "React", "MySQL", "REST APIs"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 75).toISOString(),
+    description: `Work from anywhere on the planet for Automattic, the company behind WordPress.com, WooCommerce, and Tumblr. We are seeking a passionate PHP engineer to enhance the open web.`,
+    responsibilities: [
+      "Develop custom WordPress themes, plugins, and Gutenberg editor blocks.",
+      "Scale high-traffic WordPress VIP enterprise installations handling billions of monthly pageviews.",
+      "Contribute to WordPress core open-source projects and community packages."
+    ],
+    requirements: [
+      "4+ years of professional PHP engineering experience with deep WordPress internals expertise.",
+      "Experience with modern JavaScript (React / Gutenberg block development).",
+      "Strong written communication skills for asynchronous remote collaboration."
+    ],
+    benefits: [
+      "Work from anywhere in India or the world with full remote autonomy",
+      "Open vacation policy with no maximum limits",
+      "Home office setup budget ($2,000) and coworking space stipend",
+      "Annual global company retreats in exciting destinations"
+    ],
+    status: null
+  },
+  {
+    id: "job-013",
+    title: "Full-Stack PHP Developer (Laravel + Vue.js)",
+    company: "Freshworks",
+    companyLogo: "FW",
+    logoBg: "linear-gradient(135deg, #f97316, #ea580c)",
+    location: "Hyderabad, Telangana, India",
+    isRemote: false,
+    platform: "LinkedIn",
+    platformUrl: "https://www.linkedin.com/jobs/view/freshworks-php-developer",
+    salary: { min: 1800000, max: 2800000, currency: "INR", formatted: "₹18L - ₹28L/yr" },
+    type: "Full-time",
+    experienceLevel: "Mid",
+    tags: ["PHP", "Laravel", "Vue.js", "MySQL", "AWS", "Docker"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 110).toISOString(),
+    description: `Freshworks makes refreshing business software. We're hiring a Full-Stack Engineer in Hyderabad to power our Freshdesk customer support portal with scalable Laravel backends and snappy Vue 3 interfaces.`,
+    responsibilities: [
+      "Build customer portal features using Laravel, PHP 8, and Vue 3.",
+      "Design clean RESTful and GraphQL APIs consumed by web and mobile clients.",
+      "Write comprehensive automated tests with PHPUnit and Jest."
+    ],
+    requirements: [
+      "3+ years building commercial SaaS applications in PHP / Laravel.",
+      "Proficiency with Vue.js, Vuex or Pinia, and modern CSS frameworks.",
+      "Good knowledge of AWS services (S3, RDS, SQS, EC2)."
+    ],
+    benefits: [
+      "Health insurance with maternity and dependent coverage",
+      "Well-stocked pantry, games room, and fitness center",
+      "Relocation assistance for candidates moving to Hyderabad"
+    ],
+    status: null
+  },
+  {
+    id: "job-014",
+    title: "Senior Frontend Engineer (Vue 3 & TypeScript)",
+    company: "Postman India",
+    companyLogo: "PM",
+    logoBg: "linear-gradient(135deg, #ef4444, #dc2626)",
+    location: "Bengaluru, Karnataka, India",
+    isRemote: true,
+    platform: "LinkedIn",
+    platformUrl: "https://www.linkedin.com/jobs/view/postman-vue-engineer",
+    salary: { min: 3000000, max: 4800000, currency: "INR", formatted: "₹30L - ₹48L/yr" },
+    type: "Full-time",
+    experienceLevel: "Senior",
+    tags: ["Vue 3", "TypeScript", "Vite", "Pinia", "REST APIs", "Electron"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 140).toISOString(),
+    description: `Postman is used by over 30 million developers. Join our core desktop and web application team in Bengaluru to build lightning-fast API client experiences with Vue 3 and TypeScript.`,
+    responsibilities: [
+      "Build complex interactive interfaces for API request builders, collections, and mock servers.",
+      "Optimize rendering performance of large JSON response payloads (100MB+).",
+      "Work closely with product managers to deliver intuitive developer experiences."
+    ],
+    requirements: [
+      "5+ years of frontend development experience with strong focus on Vue 3 or modern frameworks.",
+      "Mastery of TypeScript, state management, and web worker threading.",
+      "Deep empathy for developer workflows and API tooling."
+    ],
+    benefits: [
+      "Competitive base salary with lucrative Postman stock options",
+      "Flexible remote working policy with collaborative coworking hubs",
+      "Annual wellness stipend and comprehensive medical benefits"
+    ],
+    status: null
+  },
+  {
+    id: "job-015",
+    title: "DevOps & Cloud Automation Engineer",
+    company: "Zerodha",
+    companyLogo: "ZD",
+    logoBg: "linear-gradient(135deg, #387ed1, #1e40af)",
+    location: "Bengaluru, Karnataka, India",
+    isRemote: false,
+    platform: "WeWorkRemotely",
+    platformUrl: "https://weworkremotely.com/jobs/zerodha-devops",
+    salary: { min: 2800000, max: 4500000, currency: "INR", formatted: "₹28L - ₹45L/yr" },
+    type: "Full-time",
+    experienceLevel: "Senior",
+    tags: ["Python", "Go", "Docker", "Kubernetes", "PostgreSQL", "Linux", "AWS"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 190).toISOString(),
+    description: `Zerodha is India's largest stock broker, executing billions in daily trading volume with zero outside capital. We believe in lean software, open-source technology, and rock-solid systems.`,
+    responsibilities: [
+      "Maintain and harden high-availability Linux servers and Bare-metal Kubernetes clusters.",
+      "Automate multi-region failover and disaster recovery systems for real-time market data feeds.",
+      "Build internal monitoring, latency tracing, and alerting pipelines."
+    ],
+    requirements: [
+      "4+ years managing production Linux infrastructure at scale.",
+      "Strong scripting ability in Python, Bash, or Go.",
+      "Experience with PostgreSQL tuning, HAProxy, and networking security."
+    ],
+    benefits: [
+      "Generous annual profit-sharing bonus",
+      "Health insurance with 100% coverage for family",
+      "Zero corporate bureaucracy and complete technical autonomy"
+    ],
+    status: null
+  },
+  {
+    id: "job-016",
+    title: "Senior PHP / Magento E-Commerce Architect",
+    company: "TCS Digital Labs",
+    companyLogo: "TC",
+    logoBg: "linear-gradient(135deg, #1e293b, #334155)",
+    location: "Pune, Maharashtra, India",
+    isRemote: false,
+    platform: "Indeed",
+    platformUrl: "https://www.indeed.com/viewjob?jk=tcs-magento-php-pune",
+    salary: { min: 2000000, max: 3200000, currency: "INR", formatted: "₹20L - ₹32L/yr" },
+    type: "Full-time",
+    experienceLevel: "Senior",
+    tags: ["PHP", "Magento 2", "MySQL", "Docker", "REST APIs", "Redis"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 220).toISOString(),
+    description: `TCS Digital is looking for a Senior Magento / PHP Solution Architect in Pune to design enterprise e-commerce platforms for global Fortune 500 retail clients.`,
+    responsibilities: [
+      "Architect headless Adobe Commerce / Magento 2 implementations with microservices backends.",
+      "Optimize checkout funnels, catalog indexing, and payment gateway integrations.",
+      "Conduct code quality reviews and performance benchmarking."
+    ],
+    requirements: [
+      "5+ years experience in PHP development with 3+ years in Adobe Commerce / Magento 2.",
+      "Strong background in MySQL optimization and Elasticsearch integration.",
+      "Adobe Certified Expert or Professional certification is a plus."
+    ],
+    benefits: [
+      "Permanent full-time role with structured global mobility options",
+      "Health insurance, gratuity, and retirement benefits",
+      "Access to extensive enterprise upskilling certifications"
+    ],
+    status: null
+  },
+  {
+    id: "job-017",
+    title: "Full-Stack PHP & Laravel Engineer (Remote)",
+    company: "RemoteBase",
+    companyLogo: "RB",
+    logoBg: "linear-gradient(135deg, #059669, #047857)",
+    location: "Kochi, Kerala / Remote (India)",
+    isRemote: true,
+    platform: "RemoteOK",
+    platformUrl: "https://remoteok.com/remote-jobs/remotebase-laravel-php",
+    salary: { min: 1400000, max: 2400000, currency: "INR", formatted: "₹14L - ₹24L/yr" },
+    type: "Full-time",
+    experienceLevel: "Mid",
+    tags: ["PHP", "Laravel", "TailwindCSS", "Livewire", "MySQL", "Vue.js"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 260).toISOString(),
+    description: `RemoteBase connects exceptional Indian engineers with global fast-paced startups. We're looking for a Full-Stack PHP developer with strong Laravel and Tailwind expertise.`,
+    responsibilities: [
+      "Develop end-to-end web applications with Laravel, Livewire, and TailwindCSS.",
+      "Build REST APIs for mobile and third-party integrations.",
+      "Deploy and maintain applications on AWS and DigitalOcean."
+    ],
+    requirements: [
+      "3+ years with PHP / Laravel framework.",
+      "Experience with modern frontend tooling (Tailwind, Vue, or Livewire).",
+      "Good communication skills and remote work discipline."
+    ],
+    benefits: [
+      "100% remote work with flexible hours",
+      "Payment in USD equivalent with biannual appraisal cycles",
+      "Home office setup stipend and annual wellness allowance"
+    ],
+    status: null
   }
 ];

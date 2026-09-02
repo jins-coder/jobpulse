@@ -1,7 +1,7 @@
 // Storage & Export service for JobPulse
 import { DEFAULT_JOBS } from '../data/defaultJobs.js';
 
-const STORAGE_KEY_JOBS = 'jobpulse_scraped_jobs_v1';
+const STORAGE_KEY_JOBS = 'jobpulse_scraped_jobs_v2';
 const STORAGE_KEY_RUNS = 'jobpulse_scraper_history_v1';
 const STORAGE_KEY_APPLICATIONS = 'jobpulse_applications_v1';
 
@@ -15,7 +15,17 @@ export const storageService = {
         return [...DEFAULT_JOBS];
       }
       const parsed = JSON.parse(data);
-      return Array.isArray(parsed) && parsed.length > 0 ? parsed : [...DEFAULT_JOBS];
+      if (Array.isArray(parsed)) {
+        const existingIds = new Set(parsed.map(j => j.id));
+        const missingSeeds = DEFAULT_JOBS.filter(d => !existingIds.has(d.id));
+        if (missingSeeds.length > 0) {
+          const merged = [...parsed, ...missingSeeds];
+          this.saveJobs(merged);
+          return merged;
+        }
+        return parsed;
+      }
+      return [...DEFAULT_JOBS];
     } catch (e) {
       console.error("Failed to load jobs from localStorage", e);
       return [...DEFAULT_JOBS];

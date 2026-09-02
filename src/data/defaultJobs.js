@@ -576,5 +576,137 @@ export const DEFAULT_JOBS = [
       "Home office setup stipend and annual wellness allowance"
     ],
     status: null
+  },
+  {
+    id: "job-018",
+    title: "Part-Time Senior PHP / Laravel Consultant",
+    company: "Codex Media India",
+    companyLogo: "CM",
+    logoBg: "linear-gradient(135deg, #7c3aed, #4f46e5)",
+    location: "Bengaluru / Remote (India)",
+    isRemote: true,
+    platform: "LinkedIn",
+    platformUrl: "https://www.linkedin.com/jobs/view/codex-parttime-php",
+    salary: { min: 1000000, max: 1600000, currency: "INR", formatted: "₹10L - ₹16L/yr (20h/wk)" },
+    type: "Part-time",
+    experienceLevel: "Senior",
+    tags: ["PHP", "Laravel", "MySQL", "Part-Time", "REST APIs", "Redis"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+    description: `We are seeking a Part-Time Senior PHP / Laravel specialist (20 hours per week) to assist in refactoring high-traffic legacy APIs into modern Laravel 11 microservices.`,
+    responsibilities: [
+      "Dedicate 15-20 flexible hours per week to code architecture and endpoint optimization.",
+      "Conduct code reviews and guide core developers on Laravel and database best practices.",
+      "Optimize complex SQL queries and introduce Redis caching strategies."
+    ],
+    requirements: [
+      "5+ years of robust PHP / Laravel background.",
+      "Proven track record of high-quality autonomous engineering delivery.",
+      "Available for 3-4 hours daily during IST business overlap."
+    ],
+    benefits: [
+      "Complete schedule flexibility with hourly or monthly billing",
+      "Long-term part-time retainer contract with performance bonuses",
+      "Direct technical leadership role without operational overhead"
+    ],
+    status: null
+  },
+  {
+    id: "job-019",
+    title: "Part-Time Vue 3 & Frontend UI Engineer",
+    company: "SaaSify Labs",
+    companyLogo: "SL",
+    logoBg: "linear-gradient(135deg, #06b6d4, #0891b2)",
+    location: "Remote (Worldwide)",
+    isRemote: true,
+    platform: "RemoteOK",
+    platformUrl: "https://remoteok.com/remote-jobs/saasify-vue-parttime",
+    salary: { min: 65000, max: 90000, currency: "USD", formatted: "$65k - $90k/yr ($50/hr • 20h/wk)" },
+    type: "Part-time",
+    experienceLevel: "Mid-Senior",
+    tags: ["Vue 3", "Vite", "TypeScript", "TailwindCSS", "Part-Time", "Pinia"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+    description: `SaaSify Labs is looking for a part-time frontend engineer (approx 20 hours/week) to design and ship snappy Vue 3 dashboards and landing pages.`,
+    responsibilities: [
+      "Build modular and accessible Vue 3 components with Vite and TypeScript.",
+      "Implement design system tokens and responsive layouts using TailwindCSS.",
+      "Participate in weekly syncs and maintain high test coverage with Vitest."
+    ],
+    requirements: [
+      "3+ years of Vue.js experience with strong modern CSS fundamentals.",
+      "Good communicator who thrives in an asynchronous, remote-first culture.",
+      "Experience with Git, PR workflows, and component documentation."
+    ],
+    benefits: [
+      "Predictable 20 hours weekly commitment with flexible timing",
+      "Competitive hourly rate paid bi-weekly in USD",
+      "Opportunity to transition to full-time as product line expands"
+    ],
+    status: null
+  },
+  {
+    id: "job-020",
+    title: "Part-Time WordPress / Modern PHP Specialist",
+    company: "PixelCraft Digital",
+    companyLogo: "PC",
+    logoBg: "linear-gradient(135deg, #f59e0b, #d97706)",
+    location: "Pune, Maharashtra / Remote (India)",
+    isRemote: true,
+    platform: "Indeed",
+    platformUrl: "https://www.indeed.com/viewjob?jk=pixelcraft-parttime-wp",
+    salary: { min: 800000, max: 1400000, currency: "INR", formatted: "₹8L - ₹14L/yr (Part-Time)" },
+    type: "Part-time",
+    experienceLevel: "Mid",
+    tags: ["PHP", "WordPress", "WooCommerce", "Part-Time", "JavaScript", "MySQL"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 150).toISOString(),
+    description: `PixelCraft is looking for an experienced part-time developer to maintain and optimize custom e-commerce WordPress installations and WooCommerce plugins.`,
+    responsibilities: [
+      "Maintain, update, and optimize custom WordPress plugins and WooCommerce themes.",
+      "Audit page speed, database queries, and server caching performance.",
+      "Troubleshoot plugin conflicts and implement custom checkout modifications."
+    ],
+    requirements: [
+      "3+ years building and maintaining custom WordPress & WooCommerce systems.",
+      "Proficient in PHP, JavaScript, CSS3, and MySQL query profiling.",
+      "Reliable availability for 15-20 hours weekly."
+    ],
+    benefits: [
+      "100% remote working from anywhere in India",
+      "Flexible schedule around your primary commitments",
+      "Bi-weekly payments with project completion bonuses"
+    ],
+    status: null
+  },
+  {
+    id: "job-021",
+    title: "Part-Time Web Scraping & Python Automation Specialist",
+    company: "DataSprint Analytics",
+    companyLogo: "DS",
+    logoBg: "linear-gradient(135deg, #10b981, #047857)",
+    location: "Hyderabad / Remote (India)",
+    isRemote: true,
+    platform: "Wellfound",
+    platformUrl: "https://wellfound.com/jobs/datasprint-parttime-scraping",
+    salary: { min: 1100000, max: 1800000, currency: "INR", formatted: "₹11L - ₹18L/yr (Part-Time)" },
+    type: "Part-time",
+    experienceLevel: "Mid",
+    tags: ["Python", "Playwright", "FastAPI", "Part-Time", "Docker", "PostgreSQL"],
+    scrapedAt: new Date(Date.now() - 1000 * 60 * 200).toISOString(),
+    description: `DataSprint is seeking a skilled Part-Time Automation & Scraping Developer to build headless crawlers and automated extractors for market pricing intelligence.`,
+    responsibilities: [
+      "Build resilient scrapers using Playwright and Python asyncio.",
+      "Integrate proxy rotation, headless browser pools, and error recovery handlers.",
+      "Deliver structured JSON datasets to internal PostgreSQL endpoints."
+    ],
+    requirements: [
+      "Solid experience with Python, web scraping, and DOM manipulation.",
+      "Familiarity with anti-bot bypass techniques and rate limiting.",
+      "Available 15-20 hours per week."
+    ],
+    benefits: [
+      "Flexible evening or weekend hours permissible",
+      "High hourly rate with monthly retainer option",
+      "Full cloud credits and tooling budget provided"
+    ],
+    status: null
   }
 ];

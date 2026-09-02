@@ -98,6 +98,29 @@
           </div>
         </div>
 
+        <!-- Job Type Filters (Full-time / Part-time) -->
+        <div class="filter-group">
+          <span class="filter-label">Type:</span>
+          <div class="pill-options">
+            <button 
+              class="filter-pill" 
+              :class="{ active: selectedJobType === 'All' }"
+              @click="selectedJobType = 'All'"
+            >
+              All
+            </button>
+            <button 
+              v-for="jtype in jobTypes" 
+              :key="jtype" 
+              class="filter-pill"
+              :class="{ active: selectedJobType === jtype }"
+              @click="selectedJobType = jtype"
+            >
+              {{ jtype }}
+            </button>
+          </div>
+        </div>
+
         <!-- Remote Toggle -->
         <div class="toggle-group" @click="remoteOnly = !remoteOnly">
           <div class="toggle-switch" :class="{ active: remoteOnly }">
@@ -239,12 +262,14 @@ const emit = defineEmits(['select-job', 'toggle-save', 'request-scrape', 'easy-a
 
 const platforms = ['LinkedIn', 'Indeed', 'RemoteOK', 'WeWorkRemotely', 'Wellfound'];
 const levels = ['Entry', 'Mid', 'Senior', 'Lead'];
+const jobTypes = ['Full-time', 'Part-time'];
 
 // Filter states
 const searchQuery = ref('');
 const locationQuery = ref('');
 const selectedPlatform = ref('All');
 const selectedLevel = ref('All');
+const selectedJobType = ref('All');
 const remoteOnly = ref(false);
 const minSalary = ref(0);
 const sortBy = ref('match-desc');
@@ -263,6 +288,7 @@ const hasActiveFilters = computed(() => {
          locationQuery.value !== '' || 
          selectedPlatform.value !== 'All' || 
          selectedLevel.value !== 'All' || 
+         selectedJobType.value !== 'All' || 
          remoteOnly.value || 
          minSalary.value > 0;
 });
@@ -272,6 +298,7 @@ const resetFilters = () => {
   locationQuery.value = '';
   selectedPlatform.value = 'All';
   selectedLevel.value = 'All';
+  selectedJobType.value = 'All';
   remoteOnly.value = false;
   minSalary.value = 0;
   sortBy.value = 'newest';
@@ -306,6 +333,11 @@ const filteredJobs = computed(() => {
   // 4. Experience Level
   if (selectedLevel.value !== 'All') {
     list = list.filter(j => j.experienceLevel === selectedLevel.value);
+  }
+
+  // 4b. Job Type (Full-time vs Part-time)
+  if (selectedJobType.value !== 'All') {
+    list = list.filter(j => (j.type || '').toLowerCase().includes(selectedJobType.value.toLowerCase()));
   }
 
   // 5. Remote Only

@@ -65,7 +65,7 @@
 
       <div class="badges-row">
         <span v-if="job.isRemote" class="chip chip-remote">Remote</span>
-        <span class="chip chip-type">{{ job.type || 'Full-time' }}</span>
+        <span class="chip chip-type" :class="{ 'chip-part-time': (job.type || '').toLowerCase().includes('part') }">{{ job.type || 'Full-time' }}</span>
         <span v-if="job.experienceLevel" class="chip chip-level">{{ job.experienceLevel }}</span>
       </div>
     </div>
@@ -535,5 +535,11 @@ const timeAgo = (dateStr) => {
   background: rgba(56, 189, 248, 0.14);
   color: #38bdf8;
   border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.chip-part-time {
+  background: rgba(139, 92, 246, 0.18) !important;
+  color: #c4b5fd !important;
+  border: 1px solid rgba(139, 92, 246, 0.4) !important;
 }
 </style>

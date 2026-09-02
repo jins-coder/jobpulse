@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => {
   const auth = Buffer.from(`${user}:${pass}`).toString('base64')
 
   return {
+    base: './',
     plugins: [
       tailwindcss(),
       vue(),

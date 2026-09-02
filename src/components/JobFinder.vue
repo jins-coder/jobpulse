@@ -1,5 +1,14 @@
 <template>
   <div class="job-finder-root">
+    <!-- Top AI Resume Confidence Radar & Match Spotlight -->
+    <AiMatchSpotlight 
+      :jobs="jobs"
+      @select-job="$emit('select-job', $event)"
+      @easy-apply="$emit('easy-apply', $event)"
+      @edit-resume="$emit('edit-resume')"
+      @filter-suggestion="handleSuggestionFilter"
+    />
+
     <!-- Hero / Search Control Bar -->
     <div class="search-hero glass-panel">
       <div class="search-primary-row">
@@ -116,6 +125,7 @@
           <div class="sort-dropdown">
             <span class="sort-label">Sort:</span>
             <select v-model="sortBy" class="select-field">
+              <option value="match-desc">🎯 Highest Resume Match</option>
               <option value="newest">Newest Scraped</option>
               <option value="salary-desc">Highest Salary</option>
               <option value="title-asc">Title (A - Z)</option>
@@ -218,12 +228,14 @@
 <script setup>
 import { ref, computed } from 'vue';
 import JobCard from './JobCard.vue';
+import AiMatchSpotlight from './AiMatchSpotlight.vue';
+import { resumeService } from '../services/resumeService.js';
 
 const props = defineProps({
   jobs: { type: Array, default: () => [] }
 });
 
-const emit = defineEmits(['select-job', 'toggle-save', 'request-scrape', 'easy-apply']);
+const emit = defineEmits(['select-job', 'toggle-save', 'request-scrape', 'easy-apply', 'edit-resume']);
 
 const platforms = ['LinkedIn', 'Indeed', 'RemoteOK', 'WeWorkRemotely', 'Wellfound'];
 const levels = ['Entry', 'Mid', 'Senior', 'Lead'];
@@ -235,8 +247,16 @@ const selectedPlatform = ref('All');
 const selectedLevel = ref('All');
 const remoteOnly = ref(false);
 const minSalary = ref(0);
-const sortBy = ref('newest');
+const sortBy = ref('match-desc');
 const viewMode = ref('grid');
+const suggestionPrompt = ref('');
+
+const handleSuggestionFilter = (prompt) => {
+  suggestionPrompt.value = prompt;
+  if (prompt) {
+    sortBy.value = 'match-desc';
+  }
+};
 
 const hasActiveFilters = computed(() => {
   return searchQuery.value !== '' || 
@@ -298,8 +318,18 @@ const filteredJobs = computed(() => {
     list = list.filter(j => (j.salary?.min || 0) >= minSalary.value);
   }
 
-  // 7. Sort
+  // 7. Apply AI User Suggestion Filter if active
+  if (suggestionPrompt.value.trim()) {
+    list = resumeService.getJobsBySuggestion(list, null, suggestionPrompt.value.trim());
+  }
+
+  // 8. Sort
   list.sort((a, b) => {
+    if (sortBy.value === 'match-desc') {
+      const scoreA = a.matchScore ?? resumeService.computeCompatibility(a).overallScore;
+      const scoreB = b.matchScore ?? resumeService.computeCompatibility(b).overallScore;
+      return scoreB - scoreA;
+    }
     if (sortBy.value === 'newest') {
       return new Date(b.scrapedAt || 0) - new Date(a.scrapedAt || 0);
     }

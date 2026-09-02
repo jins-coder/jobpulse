@@ -85,6 +85,12 @@
 
     <!-- Quick Action Bar -->
     <div class="header-actions">
+      <!-- Candidate Resume Pill -->
+      <button class="candidate-nav-pill" @click="$emit('edit-resume')" title="View / Edit Active Resume Profile">
+        <span class="avatar-dot"></span>
+        <span class="candidate-nav-name">Resume: Alex Morgan</span>
+      </button>
+
       <div class="export-dropdown-wrapper">
         <button class="btn btn-secondary btn-sm" @click="toggleExportMenu">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -132,7 +138,7 @@ const props = defineProps({
   isScraping: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['change-view', 'quick-scrape', 'export']);
+const emit = defineEmits(['change-view', 'quick-scrape', 'export', 'edit-resume']);
 
 const showExportMenu = ref(false);
 
@@ -390,5 +396,39 @@ onUnmounted(() => {
   .header-nav {
     overflow-x: auto;
   }
+}
+
+.candidate-nav-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.candidate-nav-pill:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.avatar-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.candidate-nav-name {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
 }
 </style>

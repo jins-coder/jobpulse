@@ -11,6 +11,9 @@
             <span class="platform-dot"></span>
             {{ job.platform }}
           </span>
+          <span class="card-match-pill" :class="matchScore >= 75 ? 'match-high' : 'match-mid'">
+            ⚡ {{ matchScore }}% Match
+          </span>
           <span class="scrape-time" :title="job.scrapedAt">
             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
@@ -119,6 +122,7 @@
 
 <script setup>
 import { computed } from 'vue';
+import { resumeService } from '../services/resumeService.js';
 
 const props = defineProps({
   job: { type: Object, required: true }
@@ -127,6 +131,12 @@ const props = defineProps({
 defineEmits(['select', 'toggle-save', 'easy-apply']);
 
 const isSaved = computed(() => !!props.job.status);
+
+const matchScore = computed(() => {
+  if (props.job.matchScore) return props.job.matchScore;
+  const comp = resumeService.computeCompatibility(props.job);
+  return comp.overallScore;
+});
 
 const getPlatformClass = (platform) => {
   const map = {
@@ -503,5 +513,27 @@ const timeAgo = (dateStr) => {
 .btn-outline-sm:hover {
   background: rgba(255, 255, 255, 0.06);
   color: #f8fafc;
+}
+
+.card-match-pill {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+}
+
+.card-match-pill.match-high {
+  background: rgba(16, 185, 129, 0.16);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.card-match-pill.match-mid {
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
 }
 </style>

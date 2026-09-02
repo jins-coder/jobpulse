@@ -247,5 +247,102 @@ export const resumeService = {
         `Optimized primary experience bullets with target tech stack keywords (${primaryStack})`
       ]
     };
+  },
+
+  // 5. Parse and Rank the Most Confident Job Matches for Active Resume
+  findTopConfidentJobs(jobs = [], candidateResume = null, limit = 4) {
+    if (!jobs || jobs.length === 0) return [];
+    const resume = candidateResume || this.getMasterResume();
+
+    const scoredJobs = jobs.map(job => {
+      const comp = this.computeCompatibility(job, resume);
+      return {
+        ...job,
+        compatibility: comp,
+        matchScore: comp.overallScore,
+        confidenceRationale: this.buildConfidenceRationale(job, comp, resume)
+      };
+    });
+
+    // Sort descending by match score
+    scoredJobs.sort((a, b) => b.matchScore - a.matchScore);
+    return scoredJobs.slice(0, limit);
+  },
+
+  buildConfidenceRationale(job, comp, resume) {
+    const matchedCount = comp.matchedSkills.length;
+    const topSkills = comp.matchedSkills.slice(0, 3).join(', ');
+    if (comp.overallScore >= 90) {
+      return `Exceptional fit: ${matchedCount} verified skills aligned (${topSkills}) with senior domain match.`;
+    }
+    if (comp.overallScore >= 80) {
+      return `Strong match: High overlap on core requirements (${topSkills}); ready for immediate impact.`;
+    }
+    if (comp.overallScore >= 75) {
+      return `Solid match: Eligible for automated gap-filling to bridge secondary skills (${comp.missingSkills.slice(0, 2).join(', ')}).`;
+    }
+    return `Partial alignment: Has core fundamentals with upskilling potential in ${comp.missingSkills.slice(0, 2).join(', ')}.`;
+  },
+
+  // 6. User Suggestion & AI Prompt Filter Engine
+  getJobsBySuggestion(jobs = [], candidateResume = null, promptText = '') {
+    if (!jobs || jobs.length === 0) return [];
+    const resume = candidateResume || this.getMasterResume();
+    const query = (promptText || '').toLowerCase().trim();
+
+    if (!query) {
+      return this.findTopConfidentJobs(jobs, resume, 10);
+    }
+
+    const keywords = query.split(/\W+/).filter(w => w.length > 1);
+
+    const scored = jobs.map(job => {
+      const comp = this.computeCompatibility(job, resume);
+      const textToSearch = [
+        job.title,
+        job.company,
+        job.location,
+        job.platform,
+        job.experienceLevel,
+        ...(job.tags || []),
+        job.description || ''
+      ].join(' ').toLowerCase();
+
+      let promptHits = 0;
+      for (const kw of keywords) {
+        if (textToSearch.includes(kw)) {
+          promptHits++;
+        }
+      }
+
+      // Special prompt checks
+      if (query.includes('remote') && job.isRemote) promptHits += 2;
+      if (query.includes('high') && (query.includes('salary') || query.includes('paying')) && (job.salary?.min || 0) >= 130000) {
+        promptHits += 2;
+      }
+      if (query.includes('startup') && (job.platform === 'Wellfound' || (job.company || '').includes('Studios'))) {
+        promptHits += 2;
+      }
+
+      const promptScore = keywords.length > 0 ? Math.min(100, (promptHits / Math.max(1, keywords.length)) * 100) : 100;
+      
+      // Combined weighted confidence: 60% resume compatibility + 40% user suggestion prompt fit
+      const combinedScore = Math.round((comp.overallScore * 0.6) + (promptScore * 0.4));
+
+      return {
+        ...job,
+        compatibility: comp,
+        matchScore: comp.overallScore,
+        combinedScore,
+        promptHits,
+        suggestionRationale: `Matched prompt keywords (${promptHits} criteria) + ${comp.overallScore}% resume alignment`
+      };
+    });
+
+    // Filter out completely irrelevant if query had specific keywords
+    const filtered = scored.filter(j => j.promptHits > 0 || j.combinedScore >= 70);
+    filtered.sort((a, b) => b.combinedScore - a.combinedScore);
+
+    return filtered.length > 0 ? filtered : scored.sort((a, b) => b.combinedScore - a.combinedScore).slice(0, 6);
   }
 };

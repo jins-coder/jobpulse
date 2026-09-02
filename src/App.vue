@@ -9,6 +9,7 @@
       @change-view="switchView"
       @quick-scrape="triggerQuickScrape"
       @export="handleExport"
+      @edit-resume="openResumeEditor"
     />
 
     <!-- Active View Router / Switcher -->
@@ -22,6 +23,7 @@
         @toggle-save="toggleJobSave"
         @request-scrape="handleRequestScrapeFromFinder"
         @easy-apply="openEasyApply"
+        @edit-resume="openResumeEditor"
       />
 
       <!-- 2. Scraper Dashboard -->
@@ -144,6 +146,17 @@ const openJobDetail = (job) => {
 
 const openEasyApply = (job) => {
   easyApplyJob.value = job;
+};
+
+const openResumeEditor = () => {
+  const targetJob = jobs.value[0] || {
+    id: 'master_profile_review',
+    title: 'Master Profile Review',
+    company: 'JobPulse Career Hub',
+    platform: 'Profile',
+    tags: ['Vue 3', 'TypeScript', 'Vite']
+  };
+  openEasyApply(targetJob);
 };
 
 const handleApplicationSubmitted = ({ job, application }) => {

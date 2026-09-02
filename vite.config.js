@@ -1,5 +1,16 @@
 import vue from '@vitejs/plugin-vue'
 import { defineConfig, loadEnv } from 'vite'
+import { app as expressApp } from './server/index.js'
+
+// Express Node.js Backend Plugin for Vite Dev Server
+function expressBackendPlugin() {
+  return {
+    name: 'express-backend-plugin',
+    configureServer(server) {
+      server.middlewares.use(expressApp);
+    }
+  };
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -11,7 +22,7 @@ export default defineConfig(({ mode }) => {
   const auth = Buffer.from(`${user}:${pass}`).toString('base64')
 
   return {
-    plugins: [vue()],
+    plugins: [vue(), expressBackendPlugin()],
     server: {
       proxy: {
         '/api/opensearch': {

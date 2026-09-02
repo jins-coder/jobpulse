@@ -10,6 +10,8 @@
       @quick-scrape="triggerQuickScrape"
       @export="handleExport"
       @edit-resume="openResumeEditor"
+      @open-auth="showAuthModal = true"
+      @user-logout="handleUserLogout"
     />
 
     <!-- Active View Router / Switcher -->
@@ -77,6 +79,13 @@
       @applied="handleApplicationSubmitted"
     />
 
+    <!-- User Authentication Modal -->
+    <AuthModal 
+      v-if="showAuthModal" 
+      @close="showAuthModal = false" 
+      @auth-success="handleAuthSuccess" 
+    />
+
     <!-- Toast / Notification Bar -->
     <transition name="fade">
       <div v-if="toastMessage" class="toast-notification">
@@ -97,15 +106,18 @@ import ScraperDashboard from './components/ScraperDashboard.vue';
 import JobTracker from './components/JobTracker.vue';
 import MarketInsights from './components/MarketInsights.vue';
 import EasyApplyModal from './components/EasyApplyModal.vue';
+import AuthModal from './components/AuthModal.vue';
 import { WhatItBrokeErrorBoundary } from '@whatitbroke/vue';
 import { storageService } from './services/storageService.js';
 import { ScraperRunner } from './services/scraperService.js';
+import { authService } from './services/authService.js';
 
 // App State
 const currentView = ref('explorer'); // 'explorer' | 'scraper' | 'tracker' | 'insights'
 const jobs = ref([]);
 const selectedJob = ref(null);
 const easyApplyJob = ref(null);
+const showAuthModal = ref(false);
 const toastMessage = ref('');
 
 // Scraper Engine State
@@ -134,10 +146,19 @@ const showToast = (msg) => {
   }, 3500);
 };
 
-// Initial load
-onMounted(() => {
+onMounted(async () => {
   jobs.value = storageService.getJobs();
+  await authService.checkAuth();
 });
+
+const handleAuthSuccess = (user) => {
+  showToast(`Welcome back, ${user.name}!`);
+  showAuthModal.value = false;
+};
+
+const handleUserLogout = () => {
+  showToast('You have been signed out.');
+};
 
 // Job Actions
 const openJobDetail = (job) => {

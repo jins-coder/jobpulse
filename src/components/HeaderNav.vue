@@ -85,10 +85,28 @@
 
     <!-- Quick Action Bar -->
     <div class="header-actions">
-      <!-- Candidate Resume Pill -->
-      <button class="candidate-nav-pill" @click="$emit('edit-resume')" title="View / Edit Active Resume Profile">
-        <span class="avatar-dot"></span>
-        <span class="candidate-nav-name">Resume: Alex Morgan</span>
+      <!-- User Auth Section -->
+      <div v-if="authService.isAuthenticated.value" class="user-auth-pill-group">
+        <button class="candidate-nav-pill" @click="$emit('edit-resume')" title="View / Edit Active Resume Profile">
+          <span class="avatar-dot"></span>
+          <span class="candidate-nav-name">{{ authService.currentUser.value?.name }}</span>
+        </button>
+        <button class="btn btn-outline-sm btn-logout" @click="handleLogout" title="Sign Out">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          <span>Sign Out</span>
+        </button>
+      </div>
+
+      <button v-else class="btn btn-primary btn-sm btn-signin" @click="$emit('open-auth')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span>Sign In</span>
       </button>
 
       <div class="export-dropdown-wrapper">
@@ -130,6 +148,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
+import { authService } from '../services/authService.js';
 
 const props = defineProps({
   currentView: { type: String, default: 'explorer' },
@@ -138,7 +157,12 @@ const props = defineProps({
   isScraping: { type: Boolean, default: false }
 });
 
-const emit = defineEmits(['change-view', 'quick-scrape', 'export', 'edit-resume']);
+const emit = defineEmits(['change-view', 'quick-scrape', 'export', 'edit-resume', 'open-auth', 'user-logout']);
+
+const handleLogout = async () => {
+  await authService.logout();
+  emit('user-logout');
+};
 
 const showExportMenu = ref(false);
 
@@ -430,5 +454,32 @@ onUnmounted(() => {
 .candidate-nav-name {
   font-family: var(--font-mono);
   font-size: 0.72rem;
+}
+
+.user-auth-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-logout {
+  background: rgba(244, 63, 94, 0.1);
+  border-color: rgba(244, 63, 94, 0.25);
+  color: #fda4af;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.6rem;
+  gap: 0.3rem;
+}
+
+.btn-logout:hover {
+  background: rgba(244, 63, 94, 0.22);
+  border-color: rgba(244, 63, 94, 0.45);
+  color: #ffffff;
+}
+
+.btn-signin {
+  font-size: 0.75rem;
+  padding: 0.38rem 0.8rem;
+  gap: 0.4rem;
 }
 </style>

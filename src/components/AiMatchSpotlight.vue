@@ -32,18 +32,28 @@
           <div class="readiness-meter">
             <div class="meter-lbl-row">
               <span class="meter-title">Market Confidence Index</span>
-              <strong class="meter-percent mono">94%</strong>
+              <strong class="meter-percent mono">{{ marketConfidenceIndex }}%</strong>
             </div>
             <div class="meter-bar-track">
-              <div class="meter-bar-glow" style="width: 94%;"></div>
+              <div class="meter-bar-glow" :style="{ width: marketConfidenceIndex + '%' }"></div>
             </div>
           </div>
-          <button class="btn btn-outline-sm btn-edit-profile" @click="$emit('edit-resume')">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-            </svg>
-            <span>Edit Profile</span>
-          </button>
+          <div class="radar-action-btns">
+            <button class="btn btn-primary btn-sm btn-upload-spotlight" @click="$emit('upload-resume')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <span>Upload Resume</span>
+            </button>
+            <button class="btn btn-outline-sm btn-edit-profile" @click="$emit('edit-resume')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+              </svg>
+              <span>Edit</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -211,7 +221,12 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['select-job', 'easy-apply', 'edit-resume', 'filter-suggestion']);
+const emit = defineEmits(['select-job', 'easy-apply', 'edit-resume', 'upload-resume', 'filter-suggestion']);
+
+const marketConfidenceIndex = computed(() => {
+  const skillCount = props.resume?.skills?.length || 0;
+  return Math.min(98, Math.max(72, 70 + skillCount * 2));
+});
 
 // AI Suggestion State
 const suggestionInput = ref('');
@@ -420,12 +435,28 @@ const clearSuggestion = () => {
   box-shadow: 0 0 8px #10b981;
 }
 
+.radar-action-btns {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.btn-upload-spotlight {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+  gap: 0.35rem;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
 .btn-edit-profile {
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  font-size: 0.75rem;
-  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.55rem;
 }
 
 /* AI Suggestion Box */

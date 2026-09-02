@@ -125,7 +125,8 @@ import { computed } from 'vue';
 import { resumeService } from '../services/resumeService.js';
 
 const props = defineProps({
-  job: { type: Object, required: true }
+  job: { type: Object, required: true },
+  candidateResume: { type: Object, default: null }
 });
 
 defineEmits(['select', 'toggle-save', 'easy-apply']);
@@ -133,8 +134,7 @@ defineEmits(['select', 'toggle-save', 'easy-apply']);
 const isSaved = computed(() => !!props.job.status);
 
 const matchScore = computed(() => {
-  if (props.job.matchScore) return props.job.matchScore;
-  const comp = resumeService.computeCompatibility(props.job);
+  const comp = resumeService.computeCompatibility(props.job, props.candidateResume);
   return comp.overallScore;
 });
 

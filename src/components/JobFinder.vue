@@ -3,9 +3,11 @@
     <!-- Top AI Resume Confidence Radar & Match Spotlight -->
     <AiMatchSpotlight 
       :jobs="jobs"
+      :resume="activeResume"
       @select-job="$emit('select-job', $event)"
       @easy-apply="$emit('easy-apply', $event)"
       @edit-resume="$emit('edit-resume')"
+      @upload-resume="showUploadModal = true"
       @filter-suggestion="handleSuggestionFilter"
     />
 
@@ -38,6 +40,15 @@
             placeholder="Location or 'Remote'..."
           />
         </div>
+
+        <button class="btn btn-secondary btn-upload-radar" @click="showUploadModal = true" title="Upload custom resume to re-rank all jobs">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span>Upload & Match</span>
+        </button>
 
         <button class="btn btn-primary search-action-btn" @click="$emit('request-scrape', { query: searchQuery, location: locationQuery })">
           <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -219,6 +230,7 @@
         v-for="job in filteredJobs" 
         :key="job.id" 
         :job="job"
+        :candidate-resume="activeResume"
         @select="$emit('select-job', job)"
         @toggle-save="$emit('toggle-save', job)"
         @easy-apply="$emit('easy-apply', job)"
@@ -245,6 +257,13 @@
         </button>
       </div>
     </div>
+
+    <!-- Resume Upload & Parsing Modal -->
+    <ResumeUploadModal 
+      v-if="showUploadModal" 
+      @close="showUploadModal = false" 
+      @resume-applied="handleResumeApplied" 
+    />
   </div>
 </template>
 
@@ -252,17 +271,28 @@
 import { ref, computed } from 'vue';
 import JobCard from './JobCard.vue';
 import AiMatchSpotlight from './AiMatchSpotlight.vue';
+import ResumeUploadModal from './ResumeUploadModal.vue';
 import { resumeService } from '../services/resumeService.js';
 
 const props = defineProps({
   jobs: { type: Array, default: () => [] }
 });
 
-const emit = defineEmits(['select-job', 'toggle-save', 'request-scrape', 'easy-apply', 'edit-resume']);
+const emit = defineEmits(['select-job', 'toggle-save', 'request-scrape', 'easy-apply', 'edit-resume', 'resume-updated']);
 
 const platforms = ['LinkedIn', 'Indeed', 'RemoteOK', 'WeWorkRemotely', 'Wellfound'];
 const levels = ['Entry', 'Mid', 'Senior', 'Lead'];
 const jobTypes = ['Full-time', 'Part-time'];
+
+// Candidate Resume & Upload Modal
+const activeResume = ref(resumeService.getMasterResume());
+const showUploadModal = ref(false);
+
+const handleResumeApplied = (newResume) => {
+  activeResume.value = newResume;
+  sortBy.value = 'match-desc';
+  emit('resume-updated', newResume);
+};
 
 // Filter states
 const searchQuery = ref('');
@@ -352,14 +382,14 @@ const filteredJobs = computed(() => {
 
   // 7. Apply AI User Suggestion Filter if active
   if (suggestionPrompt.value.trim()) {
-    list = resumeService.getJobsBySuggestion(list, null, suggestionPrompt.value.trim());
+    list = resumeService.getJobsBySuggestion(list, activeResume.value, suggestionPrompt.value.trim());
   }
 
   // 8. Sort
   list.sort((a, b) => {
     if (sortBy.value === 'match-desc') {
-      const scoreA = a.matchScore ?? resumeService.computeCompatibility(a).overallScore;
-      const scoreB = b.matchScore ?? resumeService.computeCompatibility(b).overallScore;
+      const scoreA = resumeService.computeCompatibility(a, activeResume.value).overallScore;
+      const scoreB = resumeService.computeCompatibility(b, activeResume.value).overallScore;
       return scoreB - scoreA;
     }
     if (sortBy.value === 'newest') {
@@ -482,6 +512,25 @@ const filteredJobs = computed(() => {
 .search-action-btn {
   padding: 0.8rem 1.4rem;
   font-size: 0.92rem;
+}
+
+.btn-upload-radar {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.8rem 1.15rem;
+  font-size: 0.88rem;
+  white-space: nowrap;
+}
+
+.btn-upload-radar:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+  color: #ffffff;
 }
 
 /* Filters Bar */

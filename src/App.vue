@@ -26,6 +26,7 @@
         @request-scrape="handleRequestScrapeFromFinder"
         @easy-apply="openEasyApply"
         @edit-resume="openResumeEditor"
+        @resume-updated="handleResumeUpdated"
       />
 
       <!-- 2. Scraper Dashboard -->

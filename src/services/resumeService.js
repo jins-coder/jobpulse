@@ -59,6 +59,95 @@ export const DEFAULT_RESUME = {
   ]
 };
 
+// Preset Resumes for Instant Profile Switching & Matching Testing
+export const PRESET_RESUMES = {
+  php: {
+    name: "Rajesh Sharma",
+    email: "rajesh.sharma.dev@gmail.com",
+    phone: "+91 98450 21980",
+    location: "Bengaluru, India (Open to Remote)",
+    headline: "Senior PHP & Laravel Backend Architect",
+    summary: "Senior Backend Engineer with 8+ years designing scalable microservices, high-volume transactional APIs, and database architectures using PHP, Laravel, MySQL, Redis, and AWS.",
+    yearsOfExperience: 8,
+    skills: ["PHP", "Laravel", "MySQL", "Redis", "AWS", "Docker", "REST APIs", "WordPress", "Microservices", "Git"],
+    experience: [
+      {
+        role: "Lead PHP / Laravel Engineer",
+        company: "PayMatrix India",
+        period: "2021 - Present",
+        location: "Bengaluru",
+        highlights: [
+          "Architected real-time payment webhook engine in Laravel and Redis processing 2M+ transactions daily.",
+          "Optimized high-traffic MySQL relational database schemas, cutting query latencies by 60%."
+        ]
+      }
+    ]
+  },
+  vue: {
+    name: "Alex Morgan",
+    email: "alex.morgan.dev@gmail.com",
+    phone: "+1 (555) 382-9104",
+    location: "San Francisco, CA (Open to Remote)",
+    headline: "Senior Frontend & Vue.js Full-Stack Engineer",
+    summary: "Results-driven Software Engineer with 6+ years building high-performance SPAs, reactive dashboards, and design systems with Vue 3, Vite, TypeScript, and Pinia.",
+    yearsOfExperience: 6,
+    skills: ["Vue 3", "Vite", "TypeScript", "JavaScript", "Pinia", "TailwindCSS", "Node.js", "Vitest", "Docker", "REST APIs"],
+    experience: [
+      {
+        role: "Senior Frontend Engineer",
+        company: "PulseStream Tech",
+        period: "2022 - Present",
+        location: "Remote",
+        highlights: [
+          "Architected core reactive analytics dashboard using Vue 3 Composition API, improving load times by 48%."
+        ]
+      }
+    ]
+  },
+  python: {
+    name: "Maya Patel",
+    email: "maya.patel.ai@gmail.com",
+    phone: "+91 97112 45890",
+    location: "Hyderabad, India (Open to Remote)",
+    headline: "Full-Stack Python & Data Automation Engineer",
+    summary: "Specialist in building high-throughput web crawlers, data ingestion pipelines, and REST APIs with Python, FastAPI, Django, PostgreSQL, and Playwright.",
+    yearsOfExperience: 5,
+    skills: ["Python", "FastAPI", "Django", "PostgreSQL", "Docker", "Playwright", "Web Scraping", "Redis", "REST APIs", "Vue 3"],
+    experience: [
+      {
+        role: "Automation & Backend Engineer",
+        company: "DataSprint Labs",
+        period: "2021 - Present",
+        location: "Hyderabad",
+        highlights: [
+          "Engineered distributed web scraping clusters extracting 500k+ data points daily with sub-second turnaround."
+        ]
+      }
+    ]
+  },
+  wordpress: {
+    name: "Rahul Verma",
+    email: "rahul.verma.web@gmail.com",
+    phone: "+91 99231 87654",
+    location: "Pune, India (Open to Remote)",
+    headline: "WordPress & Modern PHP Specialist",
+    summary: "Web Engineer with 5+ years developing custom WordPress themes, WooCommerce extensions, headless PHP backends, and responsive JavaScript web interfaces.",
+    yearsOfExperience: 5,
+    skills: ["WordPress", "PHP", "JavaScript", "MySQL", "CSS3", "HTML5", "WooCommerce", "REST APIs", "TailwindCSS"],
+    experience: [
+      {
+        role: "Senior WordPress Consultant",
+        company: "PixelCraft Digital",
+        period: "2021 - Present",
+        location: "Pune",
+        highlights: [
+          "Developed custom headless WordPress enterprise portals with 99+ Google Lighthouse performance scores."
+        ]
+      }
+    ]
+  }
+};
+
 export const resumeService = {
   // 1. Get Master Resume from storage or seed default
   getMasterResume() {
@@ -85,29 +174,43 @@ export const resumeService = {
 
   // 2. Parse uploaded raw resume text / markdown
   parseRawText(rawText) {
-    const resume = JSON.parse(JSON.stringify(DEFAULT_RESUME));
-    if (!rawText || typeof rawText !== 'string') return resume;
+    if (!rawText || typeof rawText !== 'string') return JSON.parse(JSON.stringify(DEFAULT_RESUME));
 
+    const resume = JSON.parse(JSON.stringify(DEFAULT_RESUME));
     const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+
+    // 1. Candidate Name
     if (lines.length > 0) {
-      resume.name = lines[0].replace(/^#+\s*/, '');
+      const firstLine = lines[0].replace(/^#+\s*/, '').replace(/^name:\s*/i, '');
+      if (firstLine.length > 2 && firstLine.length < 50 && !firstLine.includes('@')) {
+        resume.name = firstLine;
+      }
     }
 
-    // Extract email
+    // 2. Email
     const emailMatch = rawText.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b/);
     if (emailMatch) resume.email = emailMatch[0];
 
-    // Extract phone
+    // 3. Phone
     const phoneMatch = rawText.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
     if (phoneMatch) resume.phone = phoneMatch[0];
 
-    // Extract recognized tech skills
+    // 4. Years of Experience
+    const expMatch = rawText.match(/(\d+)\+?\s*(?:years?|yrs?)\s*(?:of\s*)?(?:experience|exp)/i);
+    if (expMatch) {
+      resume.yearsOfExperience = parseInt(expMatch[1], 10);
+    }
+
+    // 5. Recognized Tech Skills Dictionary
     const candidateTech = [
-      "Vue 3", "Vue.js", "Vue", "Vite", "TypeScript", "JavaScript", "React", "Next.js", "Nuxt.js",
-      "PHP", "Laravel", "Symfony", "WordPress", "Magento", "MySQL",
-      "Pinia", "Vuex", "Redux", "Node.js", "Express", "Python", "FastAPI", "Go", "Rust",
-      "Docker", "Kubernetes", "AWS", "GCP", "PostgreSQL", "MongoDB", "Redis", "GraphQL", "REST APIs",
-      "TailwindCSS", "CSS3", "HTML5", "Playwright", "Jest", "Vitest", "WebSockets", "CI/CD"
+      "Vue 3", "Vue.js", "Vue", "Vite", "TypeScript", "JavaScript", "React", "Next.js", "Nuxt.js", "Angular", "Svelte",
+      "PHP", "Laravel", "Symfony", "WordPress", "WooCommerce", "Magento", "MySQL",
+      "Python", "FastAPI", "Django", "Flask", "Pandas", "Web Scraping",
+      "Node.js", "Express", "NestJS", "Go", "Golang", "Rust", "Java", "Spring Boot",
+      "Pinia", "Vuex", "Redux", "TailwindCSS", "CSS3", "HTML5",
+      "Docker", "Kubernetes", "AWS", "GCP", "PostgreSQL", "MongoDB", "Redis", "Elasticsearch", "OpenSearch",
+      "GraphQL", "REST APIs", "WebSockets", "Kafka", "Microservices",
+      "Playwright", "Jest", "Vitest", "Cypress", "CI/CD", "Git"
     ];
 
     const detectedSkills = [];
@@ -119,7 +222,28 @@ export const resumeService = {
     }
 
     if (detectedSkills.length > 0) {
-      resume.skills = Array.from(new Set([...resume.skills, ...detectedSkills]));
+      // Overwrite skills with the candidate's actual detected skills!
+      resume.skills = detectedSkills;
+    }
+
+    // 6. Professional Headline
+    if (lines.length > 1) {
+      const line2 = lines[1].replace(/^#+\s*/, '');
+      if (line2.length > 5 && line2.length < 90 && (line2.includes('|') || /engineer|developer|architect|consultant|specialist/i.test(line2))) {
+        resume.headline = line2;
+      } else if (detectedSkills.length > 0) {
+        const topSkills = detectedSkills.slice(0, 3).join(', ');
+        resume.headline = `${resume.yearsOfExperience}+ Yrs ${topSkills} Engineer`;
+      }
+    } else if (detectedSkills.length > 0) {
+      const topSkills = detectedSkills.slice(0, 3).join(', ');
+      resume.headline = `${resume.yearsOfExperience}+ Yrs ${topSkills} Engineer`;
+    }
+
+    // 7. Location
+    const locMatch = rawText.match(/Location:\s*([^\n|]+)/i) || rawText.match(/\b(Bengaluru|Hyderabad|Pune|Mumbai|Chennai|Delhi|San Francisco|New York|London|Remote)\b/i);
+    if (locMatch) {
+      resume.location = (locMatch[1] || locMatch[0]).trim();
     }
 
     return resume;

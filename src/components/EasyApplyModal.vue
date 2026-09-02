@@ -787,42 +787,19 @@ const submitEasyApply = async () => {
 
 const downloadTailoredResume = () => {
   const r = tailoredPackage.value.tailoredResume || masterResume.value;
-  const content = [
-    `============================================================`,
-    `JOBPULSE APPLICATION PACKAGE: ${props.job.title} @ ${props.job.company}`,
-    `Tracking Reference: ${submissionReceipt.value?.trackingCode || alreadySubmitted.value?.trackingCode || 'JP-DISPATCH-DIRECT'}`,
-    `============================================================\n`,
-    `CANDIDATE: ${r.name}`,
-    `HEADLINE: ${r.headline || ''}`,
-    `CONTACT: ${r.email || ''} | ${r.phone || ''} | ${r.location || ''}`,
-    `\n------------------------------------------------------------`,
-    `PERSONALIZED COVER NOTE`,
-    `------------------------------------------------------------`,
-    tailoredPackage.value.coverPitch || '',
-    `\n------------------------------------------------------------`,
-    `PROFESSIONAL SUMMARY`,
-    `------------------------------------------------------------`,
-    r.summary || '',
-    `\n------------------------------------------------------------`,
-    `TECHNICAL SKILLS`,
-    `------------------------------------------------------------`,
-    (r.skills || []).join(', '),
-    `\n------------------------------------------------------------`,
-    `WORK EXPERIENCE`,
-    `------------------------------------------------------------`,
-    ...(r.experience || []).map(e => `${e.role} | ${e.company} (${e.period})\n` + (e.highlights || []).map(h => `- ${h}`).join('\n')),
-    `\n------------------------------------------------------------`,
-    `EDUCATION`,
-    `------------------------------------------------------------`,
-    ...(r.education || []).map(ed => `${ed.degree} | ${ed.school || ''}`)
-  ].join('\n');
+  const content = resumeService.formatResumeToText(r, props.job);
 
-  const blob = new Blob([content], { type: 'text/plain' });
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
+  const safeName = (r.name || 'Candidate').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const safeCompany = (props.job.company || 'Company').replace(/[^a-zA-Z0-9_-]/g, '_');
+  const safeTitle = (props.job.title || 'Role').replace(/[^a-zA-Z0-9_-]/g, '_');
   a.href = url;
-  a.download = `${(r.name || 'Candidate').replace(/\s+/g, '_')}_Application_${props.job.company}.txt`;
+  a.download = `${safeName}_${safeCompany}_${safeTitle}_Resume.txt`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
 
@@ -983,13 +960,14 @@ const applyOnOfficialSite = () => {
   // 1. Copy tailored pitch to clipboard
   copyFullPackage();
 
-  // 2. Download tailored resume file so user can attach it on the official portal
+  // 2. Download the updated resume with bridged skills
   downloadTailoredResume();
 
-  // 3. Build application record
+  // 3. Build application record with bridged details
+  const resume = tailoredPackage.value?.tailoredResume || masterResume.value;
   const applicationRecord = {
     id: `APP-2026-${Math.floor(10000 + Math.random() * 90000)}`,
-    trackingCode: `OFFICIAL-${Math.floor(1000 + Math.random() * 9000)}`,
+    trackingCode: `JP-OFFICIAL-${Math.floor(1000 + Math.random() * 9000)}`,
     jobId: props.job.id,
     jobTitle: props.job.title,
     company: props.job.company,
@@ -998,21 +976,33 @@ const applyOnOfficialSite = () => {
     matchScore: compatibility.value?.overallScore || 85,
     appliedAt: new Date().toISOString(),
     status: 'applied',
-    tailoredResume: tailoredPackage.value?.tailoredResume,
-    coverPitch: tailoredPackage.value?.coverPitch
+    tailoredResumeText: resumeService.formatResumeToText(resume, props.job),
+    coverPitch: tailoredPackage.value?.coverPitch || '',
+    bridgedSkills: compatibility.value?.missingSkills?.slice(0, 3) || []
   };
 
   // 4. Save to local storage & update job status
   storageService.saveApplication(applicationRecord);
   storageService.updateJobStatus(props.job.id, 'applied');
 
-  // 5. Trigger applied event to update pipeline & card pills
+  // 5. Update submission receipt and switch to receipt tab
+  submissionReceipt.value = {
+    status: 'success',
+    applicationId: applicationRecord.id,
+    trackingCode: applicationRecord.trackingCode,
+    submittedAt: applicationRecord.appliedAt,
+    targetUrl: props.job.platformUrl,
+    bridgedSkills: applicationRecord.bridgedSkills
+  };
+  activeTab.value = 'receipt';
+
+  // 6. Trigger applied event to update pipeline & card pills
   emit('applied', {
     job: props.job,
     application: applicationRecord
   });
 
-  // 6. Open official company job portal in new tab
+  // 7. Open official company job portal in new tab
   const targetUrl = props.job.platformUrl && props.job.platformUrl !== '#'
     ? props.job.platformUrl
     : `https://www.google.com/search?q=${encodeURIComponent(props.job.title + ' ' + props.job.company + ' careers apply')}`;

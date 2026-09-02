@@ -429,6 +429,73 @@ export const resumeService = {
     };
   },
 
+  // 5. Generate Formatted ATS Text Resume with all Bridged Details
+  formatResumeToText(resume, job = null) {
+    const lines = [];
+    const name = (resume.name || 'JINSON JOSEPH').toUpperCase();
+    lines.push('='.repeat(78));
+    lines.push(name);
+    lines.push(`Email: ${resume.email || 'jinson@example.com'} | Phone: ${resume.phone || '+1 (555) 019-2834'}`);
+    lines.push(`Location: ${resume.location || 'Remote'} | LinkedIn: ${resume.linkedin || 'linkedin.com/in/jinsonjoseph'}`);
+    if (resume.github) lines.push(`GitHub: ${resume.github}`);
+    lines.push('='.repeat(78));
+    lines.push('');
+
+    // Summary
+    lines.push('PROFESSIONAL SUMMARY');
+    lines.push('-'.repeat(78));
+    lines.push(resume.summary || resume.headline || '');
+    lines.push('');
+
+    // Skills with Bridged Keywords
+    lines.push('CORE TECHNICAL COMPETENCIES (ATS OPTIMIZED)');
+    lines.push('-'.repeat(78));
+    const skillsList = resume.skills && resume.skills.length ? resume.skills : ['JavaScript', 'TypeScript', 'Node.js'];
+    lines.push(skillsList.join(' • '));
+    lines.push('');
+
+    // Professional Experience
+    lines.push('PROFESSIONAL WORK EXPERIENCE');
+    lines.push('-'.repeat(78));
+    if (resume.experience && resume.experience.length) {
+      resume.experience.forEach(exp => {
+        lines.push(`${exp.title || 'Senior Software Engineer'} | ${exp.company || 'Enterprise Solutions'}`);
+        lines.push(`${exp.period || '2021 - Present'} | ${exp.location || 'Remote'}`);
+        if (exp.highlights && exp.highlights.length) {
+          exp.highlights.forEach(h => lines.push(`• ${h}`));
+        } else if (exp.description) {
+          lines.push(`• ${exp.description}`);
+        }
+        lines.push('');
+      });
+    }
+
+    // Education
+    if (resume.education && resume.education.length) {
+      lines.push('EDUCATION & CREDENTIALS');
+      lines.push('-'.repeat(78));
+      resume.education.forEach(edu => {
+        lines.push(`${edu.degree || 'Bachelor of Science in Computer Science'} - ${edu.school || 'University'} (${edu.year || 'Completed'})`);
+      });
+      lines.push('');
+    }
+
+    // Projects
+    if (resume.projects && resume.projects.length) {
+      lines.push('NOTABLE TECHNICAL DELIVERABLES & PROJECTS');
+      lines.push('-'.repeat(78));
+      resume.projects.forEach(proj => {
+        lines.push(`• ${proj.title || 'System Architecture'}: ${proj.description || ''}`);
+        if (proj.tech) {
+          lines.push(`  Technologies: ${Array.isArray(proj.tech) ? proj.tech.join(', ') : proj.tech}`);
+        }
+      });
+      lines.push('');
+    }
+
+    return lines.join('\n');
+  },
+
   // 7. Find Top Confident Jobs for Candidate
   findTopConfidentJobs(jobs = [], candidateResume = null, limit = 3) {
     const resume = candidateResume || this.getMasterResume();
